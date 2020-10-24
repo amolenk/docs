@@ -76,17 +76,110 @@ private async Task SendSMSAsync(IHttpClientFactory clientFactory)
 }
 ```
 
-As you can see in the example, the code uses no specific library or SDK. Just a plain `HttpClient` to do an HTTP POST.
+As you can see in the example, the code uses no specific library or SDK. Just a plain `HttpClient` to do an HTTP POST. We use the HTTP port that is used by the Dapr sidecar (in this case 50002).
+
+The structure of the payload that you use will differ per binding. In this case, the payload contains a `data` part with a subject and message. For other bindings, this will be different. For some bindings there also is a metadata part that contains several fields (as we will see in the eShopOnDapr example later in this chapter). Each payload must also contain an `operation` field. In the example we use the `create` operation. Each binding implementer determines which operations the binding supports. Common commands are:
+
+- create
+- get
+- delete
+- list
+
+The documentation of the binding describes the possible operations and how to invoke them.
 
 ### Components
 
+Resource bindings are implemented by components. You configure bindings using a component configuration file. Here's an example for a Twitter binding:
 
+```yaml
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: twitter-mention
+  namespace: default
+spec:
+  type: bindings.twitter
+  metadata:
+  - name: consumerKey
+    value: "****" # twitter api consumer key, required
+  - name: consumerSecret
+    value: "****" # twitter api consumer secret, required
+  - name: accessToken
+    value: "****" # twitter api access token, required
+  - name: accessSecret
+    value: "****" # twitter api access secret, required
+  - name: query
+    value: "dapr" # your search query, required
+```
 
-### Configuring Bindings
+Each binding configuration contains a general `metadata` part with a `name` and `namespace` field. Dapr will use the specified name to determine the endpoint to invoke on your application when an event occurs. So in the example configuration, Dapr will invoke `/twitter-mention`.
+
+In the `spec` part, you specify the type of the binding and binding specific `metadata`. In the example you can see that you need to specify the credentials for accessing a Twitter account using its API. The metadata can differ based on whether you configure an input or an output binding. For using the Twitter binding as an input binding, you need to specify the text to search for in tweets using the `query` field. Every time a tweet that contains the specified text is published on Twitter, the Dapr sidecar will invoke the `/twitter-mention` endpoint on your application.
+
+Check out [the documentation of the different bindings](https://github.com/dapr/docs/tree/master/concepts/bindings) to get a complete and up to date list of the available bindings and their specific configuration settings.
 
 ## Reference case: eShopOnDapr
 
+In eShopOnDapr, we use a *SendGrid* binding to send an email to the user when there is a change in the status of an order. We have configured this binding in the `eshop-email.yaml` file in the components folder:
+
+```yaml
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: sendmail
+  namespace: default
+spec:
+  type: bindings.twilio.sendgrid
+  metadata:
+  - name: apiKey
+    secretKeyRef:
+      name: sendGridAPIKey
+auth:
+  secretStore: eshop-secretstore
+```
+
+As you can see in this configuration, we use the Twilio SendGrid binding. We specify the API key for connecting to the service using a Dapr secret reference. This allows us to keep secrets outside of the configuration file. Read the [Dapr secrets section](secrets-buildingblocks.md) in this chapter to learn more about Dapr secrets.
+
+Now we have specified a binding component that we can invoke using the `/sendmail` endpoint (the name specified in the config file), we can use it from eShopOnDapr. Here's a code snippet in which we use the SendGrid binding to send an email when the status of an order changes:
+
+```csharp
+public async Task Handle(OrderStartedDomainEvent notification, CancellationToken cancellationToken)
+{
+    var payload = new
+    {
+        metadata = new
+        {
+            emailFrom = "eShopOn@dapr.io",
+            emailTo = notification.UserId,
+            subject = $"Your eShopOnDapr Order #{notification.Order.Id}",
+        },
+        data = $"Dear {notification.UserName},\n\n" +
+               $"The status of your order #{notification.Order.Id} " +
+               $"has changed to {notification.Order.OrderStatus}.\n\n" +
+               $"Greetings,\n" +
+               $"The eShopOnDapr team",
+        operation = "create"
+    };
+
+    var content = new StringContent(
+        JsonSerializer.Serialize(payload),
+        Encoding.UTF8, "application/json");
+
+    var httpClient = _clientFactory.CreateClient();
+
+    await httpClient.PostAsync($"http://localhost:{_daprHttpPort}/v1.0/bindings/sendmail", content);
+}
+```
+
+> We determine the HTTP port that the Dapr sidecar uses by retrieving the value of the `DAPR_HTTP_PORT` environment variable and store this in the private `_daprHttpPort` variable.
+
+As you can see in this example, the payload for the SendGrid binding contains a metadata part that we use for specifying the email sender, recipient and the subject for the email message. We could also specify each of these metadata fields in the configuration file for this binding. The `data` field contains the message body.
+
+[TODO:input binding]
+
 ## Summary
+
+In this section ...
 
 ### References
 
