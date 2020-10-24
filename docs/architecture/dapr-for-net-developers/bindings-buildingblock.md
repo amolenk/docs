@@ -13,7 +13,7 @@ Dapr supports building applications that use different inputs and outputs with r
 
 ## What it solves
 
-You might think that the reactive behavior described in the introduction seems similar to the Publish/Subscribe pattern we described in [chapter 5](publish-subscribe-buildingblock.md). Although there are similarities, there are also some significant differences between the two.
+You might think that the reactive behavior described in the introduction seems similar to the Publish/Subscribe pattern we described in the [Publish/Subscribe section](publish-subscribe-buildingblock.md) in this chapter. Although there are similarities, there are also some significant differences between the two.
 
 Resource bindings offer a way to connect to different inputs and outputs without using any specific library or SDK in your application code. They also support more message sources and targets than the Publish/Subscribe building block (that primarily focuses on message brokers). For instance, an input binding exists for triggering an application when a tweet with a certain term in the text is published on Twitter. Also an output binding exists for sending an SMS using Twilio. Finally, an application can switch between bindings at runtime without any code changes, which is much harder to do with the Publish/Subscribe building block [TODO:CHALLENGE!!!].
 
@@ -78,7 +78,7 @@ private async Task SendSMSAsync(IHttpClientFactory clientFactory)
 
 As you can see in the example, the code uses no specific library or SDK. Just a plain `HttpClient` to do an HTTP POST. We use the HTTP port that is used by the Dapr sidecar (in this case 50002).
 
-The structure of the payload that you use will differ per binding. In this case, the payload contains a `data` part with a subject and message. For other bindings, this will be different. For some bindings there also is a metadata part that contains several fields (as we will see in the eShopOnDapr example later in this chapter). Each payload must also contain an `operation` field. In the example we use the `create` operation. Each binding implementer determines which operations the binding supports. Common commands are:
+The structure of the payload that you use will differ per binding. In this case, the payload contains a `data` part with a subject and message. For other bindings, this will be different. For some bindings there also is a metadata part that contains several fields (as we will see in the eShopOnDapr example later in this section). Each payload must also contain an `operation` field. In the example we use the `create` operation. Each binding implementer determines which operations the binding supports. Common commands are:
 
 - create
 - get
