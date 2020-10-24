@@ -72,11 +72,11 @@ private async Task SendSMSAsync(IHttpClientFactory clientFactory)
 
     var httpClient = clientFactory.CreateClient();
 
-    await httpClient.PostAsync("http://localhost:50002/v1.0/bindings/sms", content);
+    await httpClient.PostAsync("http://localhost:3500/v1.0/bindings/sms", content);
 }
 ```
 
-As you can see in the example, the code uses no specific library or SDK. Just a plain `HttpClient` to do an HTTP POST. We use the HTTP port that is used by the Dapr sidecar (in this case 50002).
+As you can see in the example, the code uses no specific library or SDK. Just a plain `HttpClient` to do an HTTP POST. We use the HTTP port that is used by the Dapr sidecar (in this case the default HTTP port `3500`).
 
 The structure of the payload that you use will differ per binding. In this case, the payload contains a `data` part with a subject and message. For other bindings, this will be different. For some bindings there also is a metadata part that contains several fields (as we will see in the eShopOnDapr example later in this section). Each payload must also contain an `operation` field. In the example we use the `create` operation. Each binding implementer determines which operations the binding supports. Common commands are:
 
