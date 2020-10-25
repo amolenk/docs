@@ -136,6 +136,8 @@ Each binding configuration contains a general `metadata` part with a `name` and 
 
 In the `spec` part, you specify the type of the binding and binding specific `metadata`. In the example, you can see that you need to specify the credentials for accessing a Twitter account using its API. The metadata can differ based on whether you configure an input or an output binding. For using the Twitter binding as an input binding, you need to specify the text to search for in tweets using the `query` field. Every time a tweet that contains text that matches the query is published on Twitter, the Dapr sidecar will invoke the `/twitter-mention` endpoint on your application. It will also deliver the contents of the Tweet
 
+A binding can be either an input, an output binding, or both. Whether a binding is used as an input binding or output binding, is not explicitly configured in the binding configuration. But depending on how you want to use the binding, certain configuration settings are mandatory or optional. It is how you use the binding in your code that eventually determines whether the binding is used for input or output.
+
 Check out [the documentation of the different bindings](https://github.com/dapr/docs/tree/master/concepts/bindings) to get a complete list of the available bindings and their specific configuration settings.
 
 ## Reference case: eShopOnDapr
