@@ -7,7 +7,7 @@ ms.date: 10/18/2020
 
 # The Resource bindings building block
 
-On of the appeals of the highly popular serverless offerings by the different cloud vendors is its reactive nature. Messages come in from all sorts of different systems that trigger certain business logic. This business logic will often yield new messages that it subsequently needs to publish using another messaging system.
+One of the appeals of the highly popular serverless offerings by the different cloud vendors is its reactive nature. Messages come in from various systems that trigger certain business logic. This business logic will often yield new messages that it subsequently needs to publish using another messaging system.
 
 Dapr supports building applications that use different inputs and outputs with resource bindings.
 
@@ -15,7 +15,7 @@ Dapr supports building applications that use different inputs and outputs with r
 
 You might think that the reactive behavior described in the introduction seems similar to the Publish/Subscribe pattern we described in the [Publish/Subscribe section](publish-subscribe-buildingblock.md) in this chapter. Although there are similarities, there are also some significant differences between the two.
 
-Resource bindings offer a way to connect to different inputs and outputs without using any specific library or SDK in your application code. They also support more message sources and targets than the Publish/Subscribe building block (that primarily focuses on message brokers). For instance, an input binding exists for triggering an application when a tweet with a certain term in the text is published on Twitter. Also an output binding exists for sending an SMS using Twilio. Finally, an application can switch between bindings at runtime without any code changes, which is much harder to do with the Publish/Subscribe building block [TODO:CHALLENGE!!!].
+Resource bindings offer a way to connect to different inputs and outputs without using any specific library or SDK in your application code. They also support more message sources and targets than the Publish/Subscribe building block (that primarily focuses on message brokers). For instance, an input binding exists for triggering an application when a tweet with a certain term in the text is published on Twitter. Also, an output binding exists for sending an SMS using Twilio. Finally, an application can switch between bindings at runtime without any code changes, which is much harder to do with the Publish/Subscribe building block.
 
 The main focus of Dapr resource bindings is to make developers more productive by removing the hassle of learning specific APIs or SDKs for integrating with all sorts of different messaging systems.
 
@@ -25,28 +25,48 @@ As stated, you don't need an SDK or library to use resource bindings. The Dapr s
 
 ### Input bindings
 
-When you configure an input binding for your application, you basically couple a public HTTP endpoint that your application provides to a particular external trigger. Here is an example:
+When you configure an input binding for your application, you basically couple a public HTTP endpoint that your application provides to a particular external trigger. Here is an example of how this works:
 
 ![Input binding](media/bindings-input.png)
 
 > In the example, the application handles HTTP calls on port 6000.
 
-1. The Dapr sidecar picks up the binding configuration and subscribes to changes in the configured event source. In the example, the event source is an Azure Event Grid.
-2. When an event is published to the Event Grid, the Dapr sidecar consumes it.
-3. The Dapr sidecar invokes the configured endpoint on your application. In the example, this is an HTTP POST on the `/update` endpoint of the application. Because it is an HTTP POST, also the payload of the event is passed in.
+1. The Dapr sidecar picks up the binding configuration and subscribes to events that occur in the configured event source. In the example, the event source is Twitter. We will dive into binding configuration in more detail in the *Components* section.
+2. When a Tweet that matches a configured query is published on Twitter, the Dapr sidecar consumes it.
+3. The Dapr sidecar invokes the configured endpoint on your application. In the example, this is an HTTP POST on the `/tweet` endpoint of the application. The endpoint is equal to the name of the binding specified in the configuration. Because it is an HTTP POST, also the JSON payload of the event is passed in.
 4. After handling the trigger, your application returns an HTTP status code `200 OK`.
 
-An alternative scenario is that something goes wrong while your application is handling the trigger. In that case, you can return an HTTP status code other than `200 OK` (for instance `500 Error`). If the binding offers at least once delivery guarantees, the Dapr sidecar will retry the trigger when that happens. Check out [the documentation of the different bindings](https://github.com/dapr/docs/tree/master/concepts/bindings) to see whether they offer at least once or exactly once delivery guarantees.
+Here is an example of an ASP.NET Core controller that handles the call triggered by the Twitter binding:
 
-We will get back to how to configure bindings when we explain binding components.
+```csharp
+[ApiController]
+public class SomeController : ControllerBase
+{
+
+    ...
+
+    [HttpPost("/tweet")]
+    public ActionResult Post(JsonElement data)
+    {
+        // handle tweet
+
+        ...
+
+        // acknowledge message
+        return Ok();
+    }
+}
+```
+
+Notice that the route for the method is equal to the name specified in the binding configuration.
+
+An alternative scenario is that something goes wrong while your application is handling the trigger. In that case, you can return an HTTP status code other than `200 OK` (for instance `500 Error`). If the binding offers at least once delivery guarantees, the Dapr sidecar will retry the trigger when that happens. Check out [the documentation of the different bindings](https://github.com/dapr/docs/tree/master/concepts/bindings) to see whether they offer at least once or exactly once delivery guarantees.
 
 ### Output bindings
 
 When you configure an output binding for your application, you can use it by invoking the bindings API on the Dapr sidecar of your application. Here is an example:
 
 ![Output binding](media/bindings-output.png)
-
-> In the example, the Dapr sidecar is configured to handle HTTP calls on port 50002.
 
 1. Your application invokes the `/v1.0/bindings/sms` endpoint on the Dapr sidecar. In this case, it uses an HTTP POST to invoke the API. It is also possible to use gRPC.
 2. The Dapr sidecar calls the external messaging system to send the message. The message will contain the payload of the HTTP call.
@@ -76,9 +96,9 @@ private async Task SendSMSAsync(IHttpClientFactory clientFactory)
 }
 ```
 
-As you can see in the example, the code uses no specific library or SDK. Just a plain `HttpClient` to do an HTTP POST. We use the HTTP port that is used by the Dapr sidecar (in this case the default HTTP port `3500`).
+As you can see in the example, the code uses no specific library or SDK. Just a plain `HttpClient` to do an HTTP POST. We use the HTTP port that is used by the Dapr sidecar (in this case, the default HTTP port `3500`).
 
-The structure of the payload that you use will differ per binding. In this case, the payload contains a `data` part with a subject and message. For other bindings, this will be different. For some bindings there also is a metadata part that contains several fields (as we will see in the eShopOnDapr example later in this section). Each payload must also contain an `operation` field. In the example we use the `create` operation. Each binding implementer determines which operations the binding supports. Common commands are:
+The structure of the payload that you use will differ per binding. In this case, the payload contains a `data` part with a subject and message. For other bindings, this will be different. For some bindings, there is also a metadata part that contains several fields (as we will see in the eShopOnDapr example later in this section). Each payload must also contain an `operation` field. In the example, we use the `create` operation. Each binding implementer determines which operations the binding supports. Common commands are:
 
 - create
 - get
@@ -89,7 +109,9 @@ The documentation of the binding describes the possible operations and how to in
 
 ### Components
 
-Resource bindings are implemented by components. You configure bindings using a component configuration file. Here's an example for a Twitter binding:
+Resource bindings are implemented by components. Bindings are contributed by the community and are written in Go. So if you need to integrate with some external messaging system for which no Dapr binding exists yet, you can create one yourself. Check out the [Dapr components-contrib repo](https://github.com/dapr/components-contrib) to see how you can contribute a binding.
+
+You configure bindings using a component configuration file. Here's an example configuration for the Twitter binding:
 
 ```yaml
 apiVersion: dapr.io/v1alpha1
@@ -112,11 +134,11 @@ spec:
     value: "dapr" # your search query, required
 ```
 
-Each binding configuration contains a general `metadata` part with a `name` and `namespace` field. Dapr will use the specified name to determine the endpoint to invoke on your application when an event occurs. So in the example configuration, Dapr will invoke `/twitter-mention`.
+Each binding configuration contains a general `metadata` part with a `name` and `namespace` field. As stated, Dapr will use the specified name to determine the endpoint to invoke on your application when an event occurs. So in the example configuration, Dapr will invoke `/twitter-mention`.
 
-In the `spec` part, you specify the type of the binding and binding specific `metadata`. In the example you can see that you need to specify the credentials for accessing a Twitter account using its API. The metadata can differ based on whether you configure an input or an output binding. For using the Twitter binding as an input binding, you need to specify the text to search for in tweets using the `query` field. Every time a tweet that contains the specified text is published on Twitter, the Dapr sidecar will invoke the `/twitter-mention` endpoint on your application.
+In the `spec` part, you specify the type of the binding and binding specific `metadata`. In the example, you can see that you need to specify the credentials for accessing a Twitter account using its API. The metadata can differ based on whether you configure an input or an output binding. For using the Twitter binding as an input binding, you need to specify the text to search for in tweets using the `query` field. Every time a tweet that contains text that matches the query is published on Twitter, the Dapr sidecar will invoke the `/twitter-mention` endpoint on your application. It will also deliver the contents of the Tweet
 
-Check out [the documentation of the different bindings](https://github.com/dapr/docs/tree/master/concepts/bindings) to get a complete and up to date list of the available bindings and their specific configuration settings.
+Check out [the documentation of the different bindings](https://github.com/dapr/docs/tree/master/concepts/bindings) to get a complete list of the available bindings and their specific configuration settings.
 
 ## Reference case: eShopOnDapr
 
