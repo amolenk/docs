@@ -150,14 +150,10 @@ public async Task Handle(OrderStartedDomainEvent notification, CancellationToken
         metadata = new
         {
             emailFrom = "eShopOn@dapr.io",
-            emailTo = notification.UserId,
-            subject = $"Your eShopOnDapr Order #{notification.Order.Id}",
+            emailTo = notification.UserName,
+            subject = $"Your eShopOnDapr order #{notification.Order.Id}",
         },
-        data = $"Dear {notification.UserName},\n\n" +
-               $"The status of your order #{notification.Order.Id} " +
-               $"has changed to {notification.Order.OrderStatus}.\n\n" +
-               $"Greetings,\n" +
-               $"The eShopOnDapr team",
+        data = CreateEmailBody(notification),
         operation = "create"
     };
 
@@ -166,14 +162,13 @@ public async Task Handle(OrderStartedDomainEvent notification, CancellationToken
         Encoding.UTF8, "application/json");
 
     var httpClient = _clientFactory.CreateClient();
-
-    await httpClient.PostAsync($"http://localhost:{_daprHttpPort}/v1.0/bindings/sendmail", content);
+    var response = await httpClient.PostAsync($"http://localhost:{_daprHttpPort}/v1.0/bindings/sendmail", content);
 }
 ```
 
 > We determine the HTTP port that the Dapr sidecar uses by retrieving the value of the `DAPR_HTTP_PORT` environment variable and store this in the private `_daprHttpPort` variable.
 
-As you can see in this example, the payload for the SendGrid binding contains a metadata part that we use for specifying the email sender, recipient and the subject for the email message. We could also specify each of these metadata fields in the configuration file for this binding. The `data` field contains the message body.
+As you can see in this example, the payload for the SendGrid binding contains a `metadata` part that we use for specifying the email sender, recipient and the subject for the email message. We could also specify each of these metadata fields in the configuration file for this binding. The `data` field contains the message body. The `CreateEmailBody` method simply formats a string with the body text.
 
 [TODO:input binding]
 
