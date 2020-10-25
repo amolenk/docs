@@ -120,7 +120,7 @@ Check out [the documentation of the different bindings](https://github.com/dapr/
 
 ## Reference case: eShopOnDapr
 
-In eShopOnDapr, we use a *SendGrid* binding to send an email to the user when there is a change in the status of an order. We have configured this binding in the `eshop-email.yaml` file in the components folder:
+In eShopOnDapr, we use a *SendGrid* binding to send an email to the user when a new order is started. We have configured this binding in the `eshop-email.yaml` file in the components folder:
 
 ```yaml
 apiVersion: dapr.io/v1alpha1
@@ -140,7 +140,7 @@ auth:
 
 As you can see in this configuration, we use the Twilio SendGrid binding. We specify the API key for connecting to the service using a Dapr secret reference. This allows us to keep secrets outside of the configuration file. Read the [Dapr secrets section](secrets-buildingblocks.md) in this chapter to learn more about Dapr secrets.
 
-Now we have specified a binding component that we can invoke using the `/sendmail` endpoint (the name specified in the config file), we can use it from eShopOnDapr. Here's a code snippet in which we use the SendGrid binding to send an email when the status of an order changes:
+By doing this, we have specified a binding component that we can invoke using the `/sendmail` endpoint on the Dapr sidecar. Here's a code snippet in which we use the binding to send an email when an order is started:
 
 ```csharp
 public async Task Handle(OrderStartedDomainEvent notification, CancellationToken cancellationToken)
