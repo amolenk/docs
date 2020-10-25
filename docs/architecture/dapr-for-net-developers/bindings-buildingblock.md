@@ -58,8 +58,6 @@ public class SomeController : ControllerBase
 }
 ```
 
-Notice that the route for the method is equal to the name specified in the binding configuration.
-
 An alternative scenario is that something goes wrong while your application is handling the trigger. In that case, you can return an HTTP status code other than `200 OK` (for instance `500 Error`). If the binding offers at least once delivery guarantees, the Dapr sidecar will retry the trigger when that happens. Check out [the documentation of the different bindings](https://github.com/dapr/docs/tree/master/concepts/bindings) to see whether they offer at least once or exactly once delivery guarantees.
 
 ### Output bindings
