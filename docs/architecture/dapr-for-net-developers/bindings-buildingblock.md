@@ -105,7 +105,7 @@ The structure of the payload that you use will differ per binding. In this case,
 
 The documentation of the binding describes the possible operations and how to invoke them.
 
-### Components
+### Binding Components
 
 Resource bindings are implemented by components. Bindings are contributed by the community and are written in Go. So if you need to integrate with some external messaging system for which no Dapr binding exists yet, you can create one yourself. Check out the [Dapr components-contrib repo](https://github.com/dapr/components-contrib) to see how you can contribute a binding.
 
@@ -139,6 +139,25 @@ In the `spec` part, you specify the type of the binding and binding specific `me
 A binding can be either an input, an output binding, or both. Whether a binding is used as an input binding or output binding, is not explicitly configured in the binding configuration. But depending on how you want to use the binding, certain configuration settings are mandatory or optional. It is how you use the binding in your code that eventually determines whether the binding is used for input or output.
 
 Check out [the documentation of the different bindings](https://github.com/dapr/docs/tree/master/concepts/bindings) to get a complete list of the available bindings and their specific configuration settings.
+
+### Cron binding
+
+A specific binding I would like to mention explicitly is the Cron binding. This binding is not subscribing to events from any external system, but it uses a configurable interval schedule to trigger your application periodically. This is an easy way to implement a background worker that needs to wake up and do some work on a regular interval, without the need to implement an endless loop with a configurable delay yourself. Here's an example of a Cron binding configuration:
+
+```yaml
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: checkOrderBacklog
+  namespace: default
+spec:
+  type: bindings.cron
+  metadata:
+  - name: schedule
+    value: "@every 30m"
+```
+
+In this example, Dapr triggers your application by invoking the `/checkOrderBacklog` endpoint every 30 minutes. There are several patterns available for specifying the `schedule` value. See the [Cron binding documentation](https://github.com/dapr/docs/blob/master/reference/specs/bindings/cron.md) for more information.
 
 ## Reference case: eShopOnDapr
 
