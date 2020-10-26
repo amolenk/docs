@@ -215,7 +215,13 @@ As you can see in this example, the payload for the SendGrid binding contains a 
 
 ## Summary
 
-In this section ...
+Dapr resource bindings enable you to integrate with different external systems without using any specific library or SDK. These external systems do not necessarily have to be messaging systems like a service bus or message broker. Bindings also exist for Azure Storage or Twitter.
+
+Input bindings (or triggers) react to events occurring in the external system and subsequently invoke the configured corresponding public HTTP endpoint on your application. Dapr uses the name of the binding in the configuration to determine the endpoint to call on your application.
+
+Output bindings will send messages to an external system. You trigger an output binding by doing an HTTP POST on the `/v1.0/bindings/<binding name>` endpoint on the Dapr sidecar. You can also use gRPC to invoke the binding.
+
+You configure bindings using the Dapr components mechanism. The binding Components are contributed by the community. Each binding component's configuration has metadata that is specific for the external system it abstracts. Also, the commands it supports and the structure of the payload will differ per binding component.
 
 ### References
 
