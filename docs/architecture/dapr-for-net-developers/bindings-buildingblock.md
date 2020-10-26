@@ -66,20 +66,20 @@ When you configure an output binding for your application, you can use it by inv
 
 ![Output binding](media/bindings-output.png)
 
-1. Your application invokes the `/v1.0/bindings/sms` endpoint on the Dapr sidecar. In this case, it uses an HTTP POST to invoke the API. It is also possible to use gRPC.
-2. The Dapr sidecar calls the external messaging system to send the message. The message will contain the payload of the HTTP call.
+1. Your application invokes the `/v1.0/bindings/sms` endpoint on the Dapr sidecar. In this case, it uses an HTTP POST to invoke the API. It is also possible to use gRPC. We will dive into that when we describe bindings support in .NET SDK.
+2. The Dapr sidecar calls the external messaging system to send the message. The message will contain the payload passed in the POST request.
 
-Here is an example of using the output binding from .NET:
+Here is an example of using the output binding using HTTP in a ASP.NET Core application:
 
 ```c#
 private async Task SendSMSAsync(IHttpClientFactory clientFactory)
 {
     var payload = new
     {
-        data = new {
-            subject = "Welcome!",
-            message = "Welcome to this awesome service"
-        },
+        data = "Welcome to this awesome service",
+        metadata = {
+          toNumber = "+31612345678"
+        }
         operation = "create"
     };
 
@@ -94,7 +94,7 @@ private async Task SendSMSAsync(IHttpClientFactory clientFactory)
 }
 ```
 
-As you can see in the example, the code uses no specific library or SDK. Just a plain `HttpClient` to do an HTTP POST. We use the HTTP port that is used by the Dapr sidecar (in this case, the default HTTP port `3500`).
+As you can see in the example, the code uses no Dapr specific library or SDK. Just the standard `HttpClient` to do an HTTP POST. We use the HTTP port that is used by the Dapr sidecar (in this case, the default HTTP port `3500`).
 
 The structure of the payload that you use will differ per binding. In this case, the payload contains a `data` part with a subject and message. For other bindings, this will be different. For some bindings, there is also a metadata part that contains several fields (as we will see in the eShopOnDapr example later in this section). Each payload must also contain an `operation` field. In the example, we use the `create` operation. Each binding implementer determines which operations the binding supports. Common commands are:
 
@@ -104,6 +104,23 @@ The structure of the payload that you use will differ per binding. In this case,
 - list
 
 The documentation of the binding describes the possible operations and how to invoke them.
+
+## Using the .NET SDK
+
+The .NET SDK offers support for invoking bindings. You can use the `InvokeBindingAsync` method of the `DaprClient` for that. Here's an example of the code for sending an SMS using the .NET SDK:
+
+```csharp
+private async Task SendSMSAsync([FromServices] DaprClient daprClient)
+{
+    var string message = "Welcome to this awesome service";
+    var metadata = new Dictionary<string,string> { { "toNumber", "+31612345678"} };
+    await DaprClient.InvokeBindingAsync("sms", "create", message, metadata);
+}
+```
+
+As you can see, you have to pass in the `command` and `metadata` as arguments in the call.
+
+When you use this method to invoke a binding, the DaprClient uses gRPC to call the Dapr API on the Dapr sidecar.
 
 ### Binding Components
 
@@ -219,7 +236,7 @@ Dapr resource bindings enable you to integrate with different external systems w
 
 Input bindings (or triggers) react to events occurring in the external system and subsequently invoke the configured corresponding public HTTP endpoint on your application. Dapr uses the name of the binding in the configuration to determine the endpoint to call on your application.
 
-Output bindings will send messages to an external system. You trigger an output binding by doing an HTTP POST on the `/v1.0/bindings/<binding name>` endpoint on the Dapr sidecar. You can also use gRPC to invoke the binding.
+Output bindings will send messages to an external system. You trigger an output binding by doing an HTTP POST on the `/v1.0/bindings/<binding name>` endpoint on the Dapr sidecar. You can also use gRPC to invoke the binding. The .NET SDK offers a `InvokeBindingAsync` method to invoke Dapr bindings using gRPC.
 
 You configure bindings using the Dapr components mechanism. The binding Components are contributed by the community. Each binding component's configuration has metadata that is specific for the external system it abstracts. Also, the commands it supports and the structure of the payload will differ per binding component.
 
