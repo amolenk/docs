@@ -25,9 +25,11 @@ As stated, you don't need an SDK or library to use resource bindings. The Dapr s
 
 ### Input bindings
 
-When you configure an input binding for your application, you basically couple a public HTTP endpoint that your application provides to a particular external trigger. Here is an example of how this works:
+When you configure an input binding for your application, you basically couple a public HTTP endpoint that your application provides to a particular external trigger. In Figure 8-1 you can see an example of how this works:
 
 ![Input binding](media/bindings-input.png)
+
+**Figure 8-1**. Dapr input binding flow.
 
 > In the example, the application handles HTTP calls on port 6000.
 
@@ -62,9 +64,11 @@ An alternative scenario is that something goes wrong while your application is h
 
 ### Output bindings
 
-When you configure an output binding for your application, you can use it by invoking the bindings API on the Dapr sidecar of your application. Here is an example:
+When you configure an output binding for your application, you can use it by invoking the bindings API on the Dapr sidecar of your application. In Figure 8-2 you can see an example:
 
 ![Output binding](media/bindings-output.png)
+
+**Figure 8-2**. Dapr output binding flow.
 
 1. Your application invokes the `/v1.0/bindings/sms` endpoint on the Dapr sidecar. In this case, it uses an HTTP POST to invoke the API. It is also possible to use gRPC. We will dive into that when we describe bindings support in .NET SDK.
 2. The Dapr sidecar calls the external messaging system to send the message. The message will contain the payload passed in the POST request.
@@ -243,5 +247,5 @@ You configure bindings using the Dapr components mechanism. The binding Componen
 ### References
 
 >[!div class="step-by-step"]
->[Previous](index.md)
->[Next](index.md)
+>[Previous](publish-subscribe-buildingblock.md)
+>[Next](observability.md)
