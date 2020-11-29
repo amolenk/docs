@@ -2,7 +2,7 @@
 title: The Resource Bindings building block
 description: A description of the Resource Bindings building-block and how to apply it
 author: edwinvw
-ms.date: 10/18/2020
+ms.date: 11/29/2020
 ---
 
 # The Resource bindings building block
