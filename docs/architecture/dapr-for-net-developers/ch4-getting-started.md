@@ -204,7 +204,7 @@ In the following walkthrough, you'll create a multi-container application from s
 
 ### Add Dapr Service Invocation
 
-In this part of the walkthrough, you'll use the Dapr Service Invocation building block to make the front-end retrieve weather forecasts from the back-end web API. The Service Invocation building block provides benefits such as service discovery, automatic retries, message encryption using mTLS, and improved observability. See [chapter 5](./ch5-service-invocation.md) for more information. You'll use the Dapr .NET SDK to invoke the service invocation API on the Dapr sidecar.
+In this part of the walkthrough, you'll use the Dapr Service Invocation building block to make the front-end retrieve weather forecasts from the back-end web API. The Service Invocation building block provides benefits such as service discovery, automatic retries, message encryption using mTLS, and improved observability. See [chapter 6](./ch6-service-invocation.md) for more information. You'll use the Dapr .NET SDK to invoke the service invocation API on the Dapr sidecar.
 
 1. In Visual Studio, open the Package Manager Console (**Tools > NuGet Package Manager > Package Manager Console**) and make sure that `DaprFrontEnd` is the default project. From the console, add the `Dapr.AspNetCore` NuGet package to the project:
    ![walkthrough-multicontainer-addpackage](/Users/sander/Git/DaprBook/MSArchDocsFork/docs/architecture/dapr-for-net-developers/media/ch4-getting-started/walkthrough-multicontainer-addpackage.png)
@@ -409,7 +409,7 @@ In the final part of this walkthrough, you'll add container support and run the 
 
    Note that when debugging, you can set breakpoints in both the front- and back-end. This makes it very easy to debug calls across services. For production scenarios, it's recommended to host your application on Kubernetes. The [eShopOnDapr sample application](...) contains scripts to deploy to Kubernetes.
    
-   To learn more about the Dapr Service Invocation building block used in this walkthrough, refer to [chapter 5](./ch5-service-invocation.md).
+   To learn more about the Dapr Service Invocation building block used in this walkthrough, refer to [chapter 6](./ch6-service-invocation.md).
 
 ## Summary
 
