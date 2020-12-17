@@ -21,34 +21,21 @@ We removed some of the functionality and services from the original eShop applic
 
 The eShopOnContainers front-end consists of a Single Page Application written in Angular. The front-end sends requests to an application gateway implemented using [Envoy](https://www.envoyproxy.io/), an OSS high performant edge and service proxy. Envoy routes the incoming requests to the various back-end services. Most of the requests are simple CRUD requests (for example, get the list of brands from the catalog) and handled by a single back-end service. Some requests, however, are logically more complex and require multiple services to work together. For these cases, eShopOnContainers uses an aggregator service that mediates the work across the various services involved in the operation. [TODO Make this a numbered list, referencing the diagram]
 
+## Benefits of applying Dapr to eShop
 
+> This section needs a lot of editing. For now, it's just a list of benefits mailed to Mark ;-)
 
-## Applying Dapr to eShop
+- eShopOnContainers uses a mix of HTTP/REST and gRPC for communication between services. This has all been replaced with Dapr Service Invocation. This solution gives us a single, easy way to communicate between services, while still giving us gRPC performance between sidecars (which are the most important calls from a perf perspective). The other benefits we get from using Dapr Service Invocation are the out-of-the-box features it provides such as mTLS and automatic retries.
 
-Adding sidecars to services.
+- eShopOnContainers supports both Azure Service Bus and Rabbit MQ. This pattern allows you to use Service Bus while running in production on Azure, but use RabbitMQ for development and testing in local environments. An `IEventBus` abstraction layer is implemented to make this work. The implementation for this layer uses around 700 lines of code. In eShopOnDapr, we've created a single implementation of `IEventBus` that uses the pub/sub building block to communicate with the different pub/sub platforms. This implementation uses 35 lines of code. That's only 5% of the lines of code needed for the custom implementation in eShopOnContainers. Part of the reason for this reduction is the integration with ASP.NET Core for subscribing to events. Instead of having to write a separate message handler loop, we can use attributes on ordinary ASP.NET Core Controllers to subscribe to messages. This has the added benefit of having a single place where all external commands/events come in, whether it's via HTTP/REST, gRPC, or messaging. With Dapr, we now support many more pub/sub platforms in addition to Azure Service Bus and RabbitMQ, such as Redis Streams, Apache Kafka, and NATS.
 
-For the Dapr version of eShop, each service now has a Dapr sidecar.
-* That makes it possible to use the Dapr building blocks.
-* You can see that we also added a sidecar to the Envoy API Gateway. 
-* That enables us to use the service invocation building block to call the backend services.
+- By using the Service Invocation and Publish & Subscribe building blocks, we've gained rich distributed tracing for both direct and pub/sub calls between services without having to write any code.
 
-
-
-[Overview of building block functionality in eShop]
-
-Link to next building block chapter for details.
-
-
-
+- The eShopOnContainers solution contained a *to-do* item for e-mailing an order confirmation to the customer. Using Dapr, we could very quickly implement this feature using an output binding. We didn't need to learn any external APIs or SDKs.
 
 ## Summary
 
-
 ### References
-
-https://docs.dapr.io/getting-started/install-dapr/
-
-
 
 >[!div class="step-by-step"]
 >[Previous](index.md)
