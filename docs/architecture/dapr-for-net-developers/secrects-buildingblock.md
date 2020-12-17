@@ -32,7 +32,7 @@ You can leverage the Secrets Management building block in two ways:
 - Call it from your application code to retrieve a secret.
 - Reference a secret from a Dapr component configuration.
 
-We'll address refencing a secret from a Dapr component configuration later. First we'll address calling the building block from your application code. 
+We'll address referencing a secret from a Dapr component configuration later. First, we'll address calling the building block from your application code. 
 
 As with the other building blocks, the Dapr sidecar offers an API for you to interact with the Secrets Management building block. You can call this API using HTTP or gRPC. This is the URL of the API:
 
@@ -59,7 +59,7 @@ GET http://localhost:3500/v1.0/secrets/secrets-store/eshopsecrets?metadata.versi
 }
 ```
 
-Some secret stores support storing multiple key-value pairs in a secret. In that case you receive all the keys and values in a single JSON response like in the following example:
+Some secret stores support storing multiple key-value pairs in a secret. In that case, you receive all the keys and values in a single JSON response like in the following example:
 
 ```http
 GET http://localhost:3500/v1.0/secrets/secrets-store/interestRates
@@ -105,7 +105,7 @@ public static IHostBuilder CreateHostBuilder(string[] args) =>
         });
 ```
 
-Notice how you need to specify a `DaprClient` when registering the provider. The client is used to invoke the secrets API on the Dapr sidecar of the application. You also need to specify the name of the secrets management component to use. Finally you have to specify which secrets to retrieve by passing in a list of `DaprSecretDescriptor` instances. A `DaprSecretDescriptor` contains a secret name and optionally a dictionary containing secret metadata. 
+Notice how you need to specify a `DaprClient` when registering the provider. The client is used to invoke the secrets API on the Dapr sidecar of the application. You also need to specify the name of the secrets management component to use. Finally, you have to specify which secrets to retrieve by passing in a list of `DaprSecretDescriptor` instances. A `DaprSecretDescriptor` contains a secret name and optionally a dictionary containing secret metadata. 
 
 Once this configuration provider is registered, it will retrieve the specified secrets and add them to the .NET configuration. Now you're able to get them in your application code:
 
@@ -118,7 +118,7 @@ public void GetCustomer(IConfiguration config)
 
 ### Secrets Management components
 
-Several Dapr components exist for implementing the Secrets Management building block. Each component uses a certain secret store. At the time of writing, Dapr supports the following set of secret stores:
+Several Dapr components exist for implementing the Secrets Management building block. Each component uses a particular secret store. At the time of writing, Dapr supports the following set of secret stores:
 
 - Environment Variables
 - Local file
@@ -130,7 +130,7 @@ Several Dapr components exist for implementing the Secrets Management building b
 
 > The environment variables and local file components are only meant for development and not for production workloads.
 
-In the following section, we're going to show you how to configure a secrets management component for your application. 
+In the following section, we will show you how to configure a secrets management component for your application. 
 
 ### Configuring Secrets Management components
 
@@ -150,7 +150,7 @@ spec:
     value: [property value]
 ```
 
-As with all the Dapr configuration files, you specify a `name` and `namespace` for the component. You specify the actual secret store to use using the `type` field of the `metadata` section. The properties you specify in the `metadata` section differ per secret store. Once you have configured the secrets management component, you can use the Dapr Secrets Management API to retrieve secrets from you application code. 
+As with all the Dapr configuration files, you specify a `name` and `namespace` for the component. You specify the actual secret store to use using the `type` field of the `metadata` section. The properties you specify in the `metadata` section differ per secret store. Once you have configured the secrets management component, you can use the Dapr Secrets Management API to retrieve secrets in your application code. 
 
 As stated before, another way of using secrets is by referencing them from other component configuration files. We'll demonstrate this with a state management component (see the State Management building block chapter for more information). We'll use a Redis cache state component. The configuration for this component might look like this:
 
@@ -169,11 +169,11 @@ spec:
     value: e$h0p0nD@pr
 ```
 
-Notice the clear-text password for connecting to the Redis server in this configuration file. This is not a secure way of dealing with a password. If you were to push this config file to a public Github repo for instance, the password is disclosed. In order to make this more secure, we could store the password in a secret store. We will show how to do this with a couple of examples.
+Notice the clear-text password for connecting to the Redis server in this configuration file. This is not a secure way of dealing with a password. If you were to push this config file to a public Github repo for instance, you have disclosed the password. To make this more secure, we could store the password in a secret store. We will show how to do this with a couple of examples.
 
 #### Local file
 
-In the first example. we will use the local file component. As stated, this is only suitable for development scenarios. First we create a JSON file named `eshop-secrets.json` that contains the secrets. Here's an example:
+In the first example, we will use the local file component. As stated, this is only suitable for development scenarios. First, we create a JSON file named `eshop-secrets.json` that contains the secrets. Here's an example:
 
 ```json
 {
@@ -181,7 +181,7 @@ In the first example. we will use the local file component. As stated, this is o
 }
 ```
 
-We place this file in the Dapr components folder that we are going to use when we run our application with Dapr. 
+We place this file in the Dapr components folder that we will use when we run our application with Dapr. 
 
 Next, we create a Secrets Management component configuration file that uses a local file as secret store in the same components folder:
 
@@ -201,7 +201,7 @@ spec:
     value: ":"
 ```
 
-Notice that the type of the component is `secretstore.local.file` and the file-name of the secrets file in the metadata. Important to notice here, is that the path to the secrets file can be specified as an absolute path or a relative path. When using a relative path, this must be specified relative to the folder from which you will start the application. In this example, the `components` folder is a sub-folder of the folder that contains a .NET application. When starting the application with Dapr in stand-alone mode, you do this from the application folder and specify the components path on the command-line:
+Notice that the type of the component is `secretstore.local.file` and the file-name of the secrets file in the metadata. You can specify the path to the secrets file as an absolute path or a relative path. When using a relative path, you must specify it relative to the folder from where you will start the application. In this example, the `components` folder is a sub-folder of the folder that contains a .NET application. When starting the application with Dapr in stand-alone mode, you do this from the application folder and specify the components path on the command-line:
 
 ```bash
 dapr run --app-id basket-api --components-path ./components dotnet run
@@ -209,7 +209,7 @@ dapr run --app-id basket-api --components-path ./components dotnet run
 
 This only works like this when running Dapr in stand-alone mode. For other hosting options, you should use a different mechanism to give Dapr access to the secrets file (e.g. volume mounts when hosting in Kubernetes). 
 
-Also notice the `nestedSeparator` in the config file. The character you specify here is used by the component to flatten the JSON hierarchy in the secrets file (if present). Imagine using the following JSON secrets file:
+Also, notice the `nestedSeparator` in the config file. The component uses the character you specify here to flatten the JSON hierarchy in the secrets file (if present). Imagine using the following JSON secrets file:
 
 ```json
 {
@@ -244,13 +244,13 @@ auth:
   secretStore: eshop-local-secret-store
 ```
 
-Notice that we use a `secretKeyRef` in stead of a literal value for the password. We specify the name of the component to use, and the name and key of the secret - in this case `eshop-local-secret-store` and `eShopRedisPassword` respectively. Using the `auth` metadata section, we specify the secrets management component to use, in this case `eshop-local-secret-store`. 
+Notice that we use a `secretKeyRef` instead of a literal value for the password. We specify the name of the component to use and the name and key of the secret, in this case: `eshop-local-secret-store` and `eShopRedisPassword` respectively. Using the `auth` metadata section, we specify the secrets management component to use, in this case: `eshop-local-secret-store`. 
 
-You might wonder why `eShopRedisPassword` is used both for the name as well as for the key in the secret reference. This is because with the local file secret store, the secrets are not identified by a separate name. This is different in the next example, where we use Kubernetes secrets.
+You might wonder why `eShopRedisPassword` is used both for the name as well as for the key in the secret reference. This is because the secrets are not identified by a separate name when using the local file secret store. This is different in the next example, where we use Kubernetes secrets.
 
 #### Kubernetes secret
 
-For this second example, we will assume the application is running in Kubernetes. We'll use the built-in secrets mechanism in Kubernetes for storing the secret. First we use the Kubernetes CLI to create a secret named `eshop-redis-secret` that contains the password:
+For this second example, we will assume the application is running in Kubernetes. We'll use the built-in secrets mechanism in Kubernetes for storing the secret. First, we use the Kubernetes CLI to create a secret named `eshop-redis-secret` that contains the password:
 
 ```bash
 kubectl create secret generic eshopsecrets --from-literal=redisPassword=e$h0p0nD@pr
@@ -277,9 +277,9 @@ auth:
   secretStore: kubernetes
 ```
 
-Notice that we use a `secretKeyRef` in stead of a literal value for the password. We specify the name of the Kubernetes secret to use, and the key of the secret - in this case `eshopsecrets` and `redisPassword` respectively. Using the `auth` metadata section, we specify the secrets management component to use, in this case Kubernetes. This is the default by the way, so this part could be omitted when using Kubernetes secrets.
+Notice that we use a `secretKeyRef` instead of a literal value for the password. We specify the name of the Kubernetes secret to use and the secret's key, in this case: `eshopsecrets` and `redisPassword` respectively. Using the `auth` metadata section, we specify the secrets management component to use, in this case: Kubernetes. This is the default by the way, so you can omit this part when using Kubernetes secrets.
 
-In a production setting, you would never create the secret like we did in the example. Typically, secrets are created as part of some automated CI/CD pipeline. This ensures that only people with sufficient access to this pipeline can access and change the secrets. Developers creating Dapr configuration files for deploying an application, can then reference the secrets without knowing the actual values. 
+In a production setting, you would never create the secret as we did in the example. Typically, secrets are created as part of some automated CI/CD pipeline. This ensures that only people with sufficient access to this pipeline can access and change the secrets. Developers creating Dapr configuration files for deploying an application can then reference the secrets without knowing the actual values. 
 
 #### Azure Key Vault
 
@@ -289,7 +289,10 @@ The next example will be a bit more elaborate and more geared toward a productio
 
 ## Reference architecture: eShopOnDapr
 
-In eShopOnDapr, we use the secrets management building block for managing two secrets: the password for connecting to the Redis cache and the API key for using the Twilio Sendgrid API that we use for sending emails using a Dapr output binding (as described in the [Bindings buildingblock chapter](bindings-buildingblock.md)).
+In eShopOnDapr, we use the secrets management building block for managing two secrets: 
+
+- the password for connecting to the Redis cache and 
+- the API-key for using the Twilio Sendgrid API. We use this to send emails using a Dapr output binding (as described in the [Bindings building block chapter](bindings-buildingblock.md)).
 
 When running the application using Docker Compose, we use the **local file** secrets management component. In the `dapr/components` folder of the eShopOnDapr repository, you find configuration file `eshop-secretstore.yaml`. It configures the local file secrets store component:
 
@@ -355,7 +358,7 @@ auth:
 
 ## Summary
 
-The Dapr Secrets Management building block provides the capability of storing and retrieving sensitive configuration settings like passwords and connection-strings. This prevents you from accidently disclosing these by pushing them to a public repo for instance.
+The Dapr Secrets Management building block provides the capability of storing and retrieving sensitive configuration settings like passwords and connection-strings. This prevents you from accidentally disclosing these by pushing them to a public repo for instance.
 
 The building block supports several different secret stores and hides their complexity by making them available through the Dapr secrets management API.
 
