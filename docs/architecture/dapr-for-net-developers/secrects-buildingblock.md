@@ -2,7 +2,7 @@
 title: The Secrets Management building block
 description: A description of the Secrets Management building block and how to apply it
 author: edwinvw
-ms.date: 12/16/2020
+ms.date: 12/17/2020
 ---
 
 # The Secrets Management building block
@@ -128,7 +128,7 @@ Several Dapr components exist for implementing the Secrets Management building b
 - GCP Secret Manager
 - HashiCorp Vault
 
-> The environment variables and local file component are only meant for development and not for production workloads.
+> The environment variables and local file components are only meant for development and not for production workloads.
 
 In the following section, we're going to show you how to configure a secrets management component for your application. 
 
@@ -289,9 +289,79 @@ The next example will be a bit more elaborate and more geared toward a productio
 
 ## Reference architecture: eShopOnDapr
 
-**TODO**
+In eShopOnDapr, we use the secrets management building block for managing two secrets: the password for connecting to the Redis cache and the API key for using the Twilio Sendgrid API that we use for sending emails using a Dapr output binding (as described in the [Bindings buildingblock chapter](bindings-buildingblock.md)).
+
+When running the application using Docker Compose, we use the **local file** secrets management component. In the `dapr/components` folder of the eShopOnDapr repository, you find configuration file `eshop-secretstore.yaml`. It configures the local file secrets store component:
+
+```yaml
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: eshop-secretstore
+  namespace: default
+spec:
+  type: secretstores.local.file
+  metadata:
+  - name: secretsFile
+    value: ./components/eshop-secretstore.json
+```
+
+This configuration references the local file `eshop-secretstore.json` in the same folder:
+
+```json
+{
+    "redisPassword": "**********",
+    "sendgridAPIKey": "**********"
+}
+```
+
+The components folder is mounted as a local folder inside the Dapr sidecar container and specified in the command-line when starting it. Here you see a snippet from the `docker-compose.override.yml` file in the root of the repository:
+
+```yaml
+  ordering-backgroundtasks-dapr:
+    command: ["./daprd",
+      "-app-id", "ordering-backgroundtasks",
+      "-app-port", "80",
+      "-dapr-grpc-port", "50004",
+      "-components-path", "/components",
+      "-config", "/configuration/eshop-config.yaml"
+      ]
+    volumes:
+      - "./dapr/components/:/components"
+      - "./dapr/configuration/:/configuration"
+```
+
+Notice the `/components`  volume mount and the `--components-path` command-line argument passed in the `daprd` startup command. 
+
+The secrets are referenced from other component configuration files. Here's an example of the configuration for the Publish/Subscribe component being used in eShopOnDapr:
+
+```yaml
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: pubsub
+  namespace: default
+spec:
+  type: pubsub.redis
+  metadata:
+  - name: redisHost
+    value: redis:6379
+  - name: redisPassword
+    secretKeyRef:
+      name: redisPassword
+auth:
+  secretStore: eshop-secretstore
+```
 
 ## Summary
+
+The Dapr Secrets Management building block provides the capability of storing and retrieving sensitive configuration settings like passwords and connection-strings. This prevents you from accidently disclosing these by pushing them to a public repo for instance.
+
+The building block supports several different secret stores and hides their complexity by making them available through the Dapr secrets management API.
+
+You can retrieve secrets in your application code or reference them from other Dapr component configuration files.
+
+The `DaprClient` in the Dapr .NET SDK provides a method to retrieve secrets. There is also a .NET configuration provider that retrieves secrets upon application startup using the secrets management API. It makes the secrets available as configuration values you can use in your .NET code. 
 
 ### References
 
