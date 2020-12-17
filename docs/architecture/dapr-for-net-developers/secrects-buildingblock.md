@@ -37,21 +37,20 @@ We'll address refencing a secret from a Dapr component configuration later. Firs
 As with the other building blocks, the Dapr sidecar offers an API for you to interact with the Secrets Management building block. You can call this API using HTTP or gRPC. This is the URL of the API:
 
 ```http
-http://localhost:<daprPort>/v1.0/secrets/<secret-store-name>/<name>
+http://localhost:<daprPort>/v1.0/secrets/<secret-store-name>/<name>?<metadata>
 ```
 
 Note the Dapr specific URL segments:
 
 - `<daprPort>` provides the port number upon which the Dapr sidecar is listening.
-
 - `<secret-store-name>` provides the name of the selected Dapr secrets management component.
-
 - `<name>` provides the name of the secret you want to retrieve.
+- `<metadata>` provides metadata of the secret you want to retrieve. This is optional and the available metadata properties will differ per secret store. See the [secrets management API reference]([Secrets API reference | Dapr Docs](https://docs.dapr.io/reference/api/secrets_api/)) for more information about the available metadata properties.
 
 The JSON response you will receive contains the key and the value of the secret. Here's an example:
 
 ```http
-GET http://localhost:3500/v1.0/secrets/secrets-store/eshopsecrets
+GET http://localhost:3500/v1.0/secrets/secrets-store/eshopsecrets?metadata.version_id=3
 ```
 
 ```json
@@ -60,7 +59,7 @@ GET http://localhost:3500/v1.0/secrets/secrets-store/eshopsecrets
 }
 ```
 
-A secret can also contain multiple key-value pairs. In that case you receive all the keys and values in a single JSON response like in the following example:
+Some secret stores support storing multiple key-value pairs in a secret. In that case you receive all the keys and values in a single JSON response like in the following example:
 
 ```http
 GET http://localhost:3500/v1.0/secrets/secrets-store/interestRates
@@ -74,24 +73,17 @@ GET http://localhost:3500/v1.0/secrets/secrets-store/interestRates
 }
 ```
 
-Whether you can store multiple keys in a secret depends on the actual secret store you have configured.
-
-**TODO: Metadata**
-
 ### Using the Dapr .NET SDK
 
 Getting secrets using the Dapr .NET SDK is pretty straightforward. The DaprClient offers a method `GetSecrecretAsync` for retrieving secrets using the Secrets Management building block. In the following code-snippet, the connection-string for connecting to a Sql Server database is retrieved:
 
 ```csharp
-Dictionary<string,string> secrets = await daprClient.GetSecretAsync("secrets-store", "eshopsecrets");
+Dictionary<string, string> metadata = new Dictionary<string, string> { { "version_id", "3" } };
+Dictionary<string,string> secrets = await daprClient.GetSecretAsync("secrets-store", "eshopsecrets", metadata);
 string connectionString = secrets["customerdb"];
 ```
 
-You need to specify the name of the secret store component to use and the name of the secret you want to retrieve. 
-
-Notice that you receive a dictionary as result. A secret can contain multiple key-value pairs as you saw in the *How it works* section. In this case, we extract the secret named `customerdb` to get the connection-string.
-
-**TODO: Metadata**
+You need to specify the name of the secret store component to use and the name of the secret you want to retrieve. The metadata is optional and differs per secret store. Notice that you always receive a dictionary as result. This is because some secret stores support storing multiple key-value pairs in a secret. In the example, we extract the secret named `customerdb` to get the connection-string.
 
 The .NET SDK also offers a .NET configuration provider for working with secrets. The provider is available in the *Dapr.Extensions.Configuration* nuget package. In the following code-snippet, you see an example of registering the secrets configuration provider in the `Program.cs` of an ASP.NET WebAPI application:  
 
@@ -123,8 +115,6 @@ public void GetCustomer(IConfiguration config)
     var connectionString = config["eshopsecrets"]["customerdb"];
 }
 ```
-
-**TODO: validate with RC2**
 
 ### Secrets Management components
 
@@ -232,8 +222,6 @@ Also notice the `nestedSeparator` in the config file. The character you specify 
 ```
 
 With a colon as separator, you can then get at the value of the customerdb connection-string using the key `connectionStrings:customerdb`. The colon is the default separator (also when nothing is specified).
-
-> [DISCUSS: issue #550 with flattened map]
 
 Now that we have configured the secrets management component, we can use it in the State Management configuration file:
 
