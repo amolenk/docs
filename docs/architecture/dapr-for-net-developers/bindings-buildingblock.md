@@ -7,21 +7,38 @@ ms.date: 11/29/2020
 
 # The Resource bindings building block
 
-One of the appeals of the highly popular serverless offerings by the different cloud vendors is its reactive nature. Messages come in from various systems that trigger certain business logic. This business logic will often yield new messages that it subsequently needs to publish using another messaging system.
+https://docs.dapr.io/developing-applications/building-blocks/bindings/bindings-overview/
 
-Dapr supports building applications that use different inputs and outputs with resource bindings.
+https://docs.dapr.io/developing-applications/building-blocks/bindings/howto-triggers/
+https://docs.dapr.io/developing-applications/building-blocks/bindings/howto-bindings/
+
+
+Dapr terminology--Trigger is an input binding
+-- Binding is an output binding 
+
+
+Cloud-based serverless offerings, such as Azure Functions and AWS Lambda, enable services to directly bind to a wide variety of external resources, including databases, message queues, distributed caches, and more. Consider a database insert operation that fires an event that triggers business logic to execute in an external service. When complete, the result triggers an event to store the response in an external storage account.
+
+The [Dapr resource binding building block](https://docs.dapr.io/developing-applications/building-blocks/bindings/bindings-overview/) increases developer productivity by abstracting the complexities of binding to external resources.
 
 ## What it solves
 
-You might think that the reactive behavior described in the introduction seems similar to the Publish/Subscribe pattern we described in the [Publish/Subscribe section](publish-subscribe-buildingblock.md) in this chapter. Although there are similarities, there are also some significant differences between the two.
+The resource binding building block exposes an event-driven mechanism to consume inputs from and provide outputs to external systems - without taking dependencies on them.
 
-Resource bindings offer a way to connect to different inputs and outputs without using any specific library or SDK in your application code. They also support more message sources and targets than the Publish/Subscribe building block (that primarily focuses on message brokers). For instance, an input binding exists for triggering an application when a tweet with a certain term in the text is published on Twitter. Also, an output binding exists for sending an SMS using Twilio. Finally, an application can switch between bindings at runtime without any code changes, which is much harder to do with the Publish/Subscribe building block.
+Your service could consume an input binding that raises an event when a tweet with a certain keyword is published on Twitter. Your service could also consume an output binding that sends an SMS message about that tweet using Twilio.  
 
-The main focus of Dapr resource bindings is to make developers more productive by removing the hassle of learning specific APIs or SDKs for integrating with all sorts of different messaging systems.
+At first glance, resource bindings might look similar to the [Publish/Subscribe pattern](publish-subscribe-buildingblock.md) described earlier in this book. Although they share similarities, there are significant differences. While publish/subscribe focuses on message brokers, resource bindings support a wide variety of sources. Resource bindings implement a push rather than pull mechansim. Finally, an application can switch resource bindings at runtime without any code changes, which is much harder to do with the Publish/Subscribe building block. 
 
 ## How it works
 
-As stated, you don't need an SDK or library to use resource bindings. The Dapr sidecar will use input bindings to trigger your application by invoking a public HTTP endpoint that you provide. You trigger output bindings from your application by calling an API on the Dapr sidecar - either using HTTP or gRPC. Let's dive in.
+With Dapr, SDKs or libraries are not required to bind to external resources. A service binds to an external resource using an input binding and a Dapr sidecar. The service triggers external resources using an output binding a sidecar. The following sections detail both scenarios.
+
+
+
+The building block uses a Dapr sidecar to trigger input bindings configured in the target service. Output bindings in the service trigger a resource using a sidecare, using either HTTP or gRPC.
+
+With Dapr, SDKs or libraries are not required to use resource bindings. 
+Instead, the resource binding building block  The Dapr sidecar will use input bindings to trigger your application by invoking a public HTTP endpoint that you provide. You trigger output bindings from your application by calling an API on the Dapr sidecar - either using HTTP or gRPC. Let's dive in.
 
 ### Input bindings
 
@@ -245,3 +262,12 @@ You configure bindings using the Dapr components mechanism. The binding Componen
 >[!div class="step-by-step"]
 >[Previous](index.md)
 >[Next](index.md)
+
+
+
+// Extra
+Serverless computing is a cloud computing execution model in which the cloud provider runs ... Serverless vendors offer compute runtimes, also known as function as a service (FaaS) platforms, which execute application logic but do not store ...
+Serverless offerings, such as Azure Functions, AWS Lambda, and Google Cloud Functions, have been widely adopted across organizations. A key feature are bindings which enable you to receive or send events to a variety of resources.  
+One of the appeals of the highly popular serverless offerings by the different cloud vendors is its reactive nature. Messages come in from various systems that trigger certain business logic. This business logic will often yield new messages that it subsequently needs to publish using another messaging system.
+
+Dapr supports building applications that use different inputs and outputs with resource bindings.
