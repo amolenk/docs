@@ -490,5 +490,5 @@ You can use secret scopes to control access to specific secrets.
 ### References
 
 >[!div class="step-by-step"]
->[Previous](serviceinvocation.md)
->[Next](bindings-buildingblock.md)
+>[Previous](observability.md)
+>[Next](actors.md)
