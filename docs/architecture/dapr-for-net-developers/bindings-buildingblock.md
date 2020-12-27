@@ -13,7 +13,7 @@ Cloud-based *serverless* offerings, such as Azure Functions and AWS Lambda, have
 
 Dapr resource bindings enable your services to integrate business operations across external resources outside of the immediate application. An event from an external system could trigger an operation in your service passing in contextual information. Your service could then expand the operation by triggering an event in another external system, passing in contextual payload information. Your service communicates without coupling or awareness of the external resource. The plumbing is encapsulated inside pre-defined Dapr components.  
 
-Consider, for example, a Twitter account that triggers an event whenever a user tweets a keyword. Your service exposes an event handler that receives and processes the tweet. On the flip side, your service triggers a subsequent event that invokes an external Twillo service to send an SMS message that includes the tweet. Figure 8-1 show the conceptual architecture of this operation. 
+Consider, for example, a Twitter account that triggers an event whenever a user tweets a keyword. Your service exposes an event handler that receives and processes the tweet. Once complete, your service triggers an event that invokes an external Twilio service. Twiilio sends an SMS message that includes the tweet. Figure 8-1 show the conceptual architecture of this operation. 
 
 ![Input binding](media/resource-binding-conceptual-architecture.png)
 
@@ -64,7 +64,7 @@ public class SomeController : ControllerBase
 }
 ```
 
-If something were to go wrong handling the event, you would return the appropriate 400 or 500 level HTTP status code. If the binding resource offers *at-least-once-delivery* guarantees, the Dapr sidecar will retry the trigger. Check out [the documentation of the different bindings](https://github.com/dapr/docs/tree/master/concepts/bindings) to see whether they offer *at-least-once* or *exactly-once* delivery guarantees. If you do not send back a response code, Dapr may assume the worst and redeliver the message.
+If the operation should error, you would return the appropriate 400 or 500 level HTTP status code. For bindings that feature *at-least-once-delivery* guarantees, the Dapr sidecar will retry the trigger. Check out [the documentation of the different bindings](https://github.com/dapr/docs/tree/master/concepts/bindings) to see whether they offer *at-least-once* or *exactly-once* delivery guarantees.
 
 ### Output bindings
 
@@ -104,7 +104,7 @@ private async Task SendSMSAsync(IHttpClientFactory clientFactory)
 
 To start, note how the previous figure uses a standard `HttpClient` object to execute an HTTP POST operation. There are no references to a specific Dapr library or SDK. Note also that the port is the same as used by the Dapr sidecar (in this case, the default HTTP port `3500`). 
 
-The structure of the payload (that is, message sent) will vary per binding. In the example above, the payload contains a `data` element  with a message. Bindings to other types of external resources can be different, especially in terms of the metadata that is sent. Each payload must also contain an `operation` field, that defines the operation the binding will execute. The above example specifies a  `create` operation that creates the SMS message. Common operations include:
+The structure of the payload (that is, message sent) will vary per binding. In the example above, the payload contains a `data` element  with a message. Bindings to other types of external resources can be different, especially for the metadata that is sent. Each payload must also contain an `operation` field, that defines the operation the binding will execute. The above example specifies a  `create` operation that creates the SMS message. Common operations include:
 
 - create
 - get
@@ -126,7 +126,7 @@ private async Task SendSMSAsync([FromServices] DaprClient daprClient)
 }
 ```
 
-Note that the method expects the `metadata` and `message` values.
+The method expects the `metadata` and `message` values.
 
 When used to invoke a binding, the `DaprClient` uses gRPC to call the Dapr API on the Dapr sidecar.
 
@@ -240,8 +240,6 @@ public async Task Handle(OrderStartedDomainEvent notification, CancellationToken
 > The HTTP port is for the Dapr sidecar is retrieved from the `DAPR_HTTP_PORT` environment variable and stored in the private `_daprHttpPort` variable.
 
 As you can see in this example, the payload for the SendGrid binding contains a `metadata` element that specifies the email sender, recipient, and the subject for the email message. If the values are static, they can also be included in the metadata fields in the configuration file. The `data` field contains the message body. The `CreateEmailBody` method simply formats a string with the body text.
-
-[TODO:input binding]
 
 ## Summary
 
