@@ -13,7 +13,7 @@ Cloud-based *serverless* offerings, such as Azure Functions and AWS Lambda, have
 
 Dapr resource bindings enable your services to integrate business operations across external resources outside of the immediate application. An event from an external system could trigger an operation in your service passing in contextual information. Your service could then expand the operation by triggering an event in another external system, passing in contextual payload information. Your service communicates without coupling or awareness of the external resource. The plumbing is encapsulated inside pre-defined Dapr components.  
 
-Consider, for example, a Twitter account that triggers an event whenever a user tweets a keyword. Your service exposes an event handler that receives and processes the tweet. Once complete, your service triggers an event that invokes an external Twilio service. Twiilio sends an SMS message that includes the tweet. Figure 8-1 show the conceptual architecture of this operation. 
+Consider, for example, a Twitter account that triggers an event whenever a user tweets a keyword. Your service exposes an event handler that receives and processes the tweet. Once complete, your service triggers an event that invokes an external Twilio service. Twiilio sends an SMS message that includes the tweet. Figure 8-1 show the conceptual architecture of this operation.
 
 ![Input binding](media/resource-binding-conceptual-architecture.png)
 
@@ -21,7 +21,7 @@ Consider, for example, a Twitter account that triggers an event whenever a user 
 
 At first glance, resource binding behavior may appear similar to the [Publish/Subscribe pattern](publish-subscribe-buildingblock.md) described earlier in this book. While they share similarities, there are differences. Publish/subscribe focuses on asynchronous communication between Dapr services. Resource binding has a much wider scope. It focuses on system interoperability across software platforms. Exchanging information between disparate applications, datastores, and services outside your microservice application.
 
-Lastly, Dapr resource bindings can be easily swapped at runtime without code changes. 
+Lastly, Dapr resource bindings can be easily swapped at runtime without code changes.
 
 ## How it works
 
@@ -37,10 +37,10 @@ Input bindings trigger your code with incoming events from external resources. T
 
 Figure 8.2 describes the steps for receiving events from an external Twitter account:
 
-1. The Dapr sidecar reads the binding configuration file and subscribes to the event specified for external resource. In the example, the event source is a Twitter account. 
+1. The Dapr sidecar reads the binding configuration file and subscribes to the event specified for external resource. In the example, the event source is a Twitter account.
 2. When a matching Tweet is published on Twitter, the Dapr runtime triggers an event.
 3. The Dapr sidecar responds by invoking the endpoint (that is, event handler) configured for the binding. In the example, the service listens for an HTTP POST on the `/tweet` endpoint on port 6000. Because it's an HTTP POST operation, the JSON payload for the event is passed in the request body.
-4. After handling the event, the service returns an HTTP status code `200 OK`. 
+4. After handling the event, the service returns an HTTP status code `200 OK`.
 
 The following ASP.NET Core controller provides an example of handling an event triggered by the Twitter binding:
 
@@ -74,7 +74,7 @@ Dapr also includes *output binding* capabilities. They enable your service to tr
 
 **Figure 8-3**. Dapr output binding.
 
-1. Your application invokes the `/v1.0/bindings/sms` endpoint on the Dapr sidecar. In this case, it uses an HTTP POST to invoke the API. It's also possible to use gRPC. 
+1. Your application invokes the `/v1.0/bindings/sms` endpoint on the Dapr sidecar. In this case, it uses an HTTP POST to invoke the API. It's also possible to use gRPC.
 2. The Dapr sidecar calls the external messaging system to send the message. The message will contain the payload passed in the POST request.
 
 As an example, the following method implements an output binding in a ASP.NET Core application:
@@ -102,7 +102,7 @@ private async Task SendSMSAsync(IHttpClientFactory clientFactory)
 }
 ```
 
-To start, note how the previous figure uses a standard `HttpClient` object to execute an HTTP POST operation. There are no references to a specific Dapr library or SDK. Note also that the port is the same as used by the Dapr sidecar (in this case, the default HTTP port `3500`). 
+To start, note how the previous figure uses a standard `HttpClient` object to execute an HTTP POST operation. There are no references to a specific Dapr library or SDK. Note also that the port is the same as used by the Dapr sidecar (in this case, the default HTTP port `3500`).
 
 The structure of the payload (that is, message sent) will vary per binding. In the example above, the payload contains a `data` element  with a message. Bindings to other types of external resources can be different, especially for the metadata that is sent. Each payload must also contain an `operation` field, that defines the operation the binding will execute. The above example specifies a  `create` operation that creates the SMS message. Common operations include:
 
@@ -136,7 +136,6 @@ Under the hood, resource bindings are implemented with Dapr binding components. 
 
 > [!NOTE]
 > Dapr and all of its components are written in the [Golang](https://golang.org/) (Go) language. Go is considered a modern, cloud-native programming platform.
-
 
 You configure bindings using a yaml configuration file. Here's an example configuration for the Twitter binding:
 
@@ -256,4 +255,3 @@ You implement a binding with a Dapr component. These components are contributed 
 >[!div class="step-by-step"]
 >[Previous](publish-subscribe-buildingblock.md)
 >[Next](observability.md)
-
