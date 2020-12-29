@@ -13,7 +13,7 @@ Cloud-based *serverless* offerings, such as Azure Functions and AWS Lambda, have
 
 Dapr resource bindings enable your services to integrate business operations across external resources outside of the immediate application. An event from an external system could trigger an operation in your service passing in contextual information. Your service could then expand the operation by triggering an event in another external system, passing in contextual payload information. Your service communicates without coupling or awareness of the external resource. The plumbing is encapsulated inside pre-defined Dapr components.  
 
-Consider, for example, a Twitter account that triggers an event whenever a user tweets a keyword. Your service exposes an event handler that receives and processes the tweet. Once complete, your service triggers an event that invokes an external Twilio service. Twiilio sends an SMS message that includes the tweet. Figure 8-1 show the conceptual architecture of this operation.
+Consider, for example, a Twitter account that triggers an event whenever a user tweets a keyword. Your service exposes an event handler that receives and processes the tweet. Once complete, your service triggers an event that invokes an external Twilio service. Twilio sends an SMS message that includes the tweet. Figure 8-1 show the conceptual architecture of this operation.
 
 ![Input binding](media/resource-binding-conceptual-architecture.png)
 
@@ -25,7 +25,7 @@ Lastly, Dapr resource bindings can be easily swapped at runtime without code cha
 
 ## How it works
 
-Dapr resource binding starts with a yaml-based file called a *binding configuration*. This file describes the resource to which you'll communicate along with its binding details. Once configured, your service can receive or trigger events from the resource. (Binding configurations are presented in detail later in the *Components* section.)
+Dapr resource binding starts with a yaml-based file called a *binding configuration*. This file describes the resource to which you'll communicate along with its binding details. Once configured, your service can receive events from the resource or trigger events on it. (Binding configurations are presented in detail later in the *Components* section.)
 
 ### Input bindings
 
@@ -48,9 +48,6 @@ The following ASP.NET Core controller provides an example of handling an event t
 [ApiController]
 public class SomeController : ControllerBase
 {
-
-    //...
-
     [HttpPost("/tweet")]
     public ActionResult Post(JsonElement data)
     {
@@ -61,6 +58,8 @@ public class SomeController : ControllerBase
         // acknowledge message
         return Ok();
     }
+  
+    //...  
 }
 ```
 
@@ -185,7 +184,7 @@ spec:
     value: "@every 30m"
 ```
 
-In this example, Dapr triggers a service by invoking the `/checkOrderBacklog` endpoint every 30 minutes. There are several patterns available for specifying the `schedule` value. For more informationSee, see the [Cron binding documentation](ocs.dapr.io/operations/components/setup-bindings/supported-bindings/cron/).
+In this example, Dapr triggers a service by invoking the `/checkOrderBacklog` endpoint every 30 minutes. There are several patterns available for specifying the `schedule` value. For more information, see the [Cron binding documentation](ocs.dapr.io/operations/components/setup-bindings/supported-bindings/cron/).
 
 ## Reference architecture: eShopOnDapr
 
@@ -207,7 +206,7 @@ auth:
   secretStore: eshop-secretstore
 ```
 
-This configuration uses the [Twilio SendGrid](https://github.com/dapr/components-contrib/tree/master/bindings/twilio) binding component. Note how the API key for connecting to the service consumes a Dapr secret reference. This approach keeps secrets outside of the configuration file. Read the [Dapr secrets section](secrets-buildingblocks.md) in this chapter to learn more about Dapr secrets.
+This configuration uses the [Twilio SendGrid](https://github.com/dapr/components-contrib/tree/master/bindings/twilio) binding component. Note how the API key for connecting to the service consumes a Dapr secret reference. This approach keeps secrets outside of the configuration file. Read the [Dapr secrets management chapter](secrets-buildingblocks.md) to learn more about Dapr secrets.
 
 The binding specifies a binding component that can be invoked using the `/sendmail` endpoint on the Dapr sidecar. Here's a code snippet in which an email is sent whenever an order is started:
 
