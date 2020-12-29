@@ -254,5 +254,6 @@ You implement a binding with a Dapr component. These components are contributed 
 ### References
 
 >[!div class="step-by-step"]
->[Previous](index.md)
->[Next](index.md)
+>[Previous](publish-subscribe-buildingblock.md)
+>[Next](observability.md)
+
