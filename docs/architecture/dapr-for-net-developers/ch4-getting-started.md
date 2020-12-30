@@ -111,7 +111,7 @@ While you can use both HTTP and gRPC to call the Dapr APIs, it's much nicer to u
 
    Try stopping and starting the application a couple of times. You'll see that the counter will not reset, but start from the previously saved state, making this a truly stateful application.
 
-At this point, you might wonder where the state is actually stored. For that we'll have to look at component configuration files in the next section.
+At this point, you might wonder where the state is actually stored. For that we'll have to look at component configuration files, which we will address in the next section.
 
 ## Component configuration files
 
