@@ -1,11 +1,11 @@
 ---
-title: The Resource Bindings building block
-description: A description of the Resource Bindings building-block, its features, benefits, and how to apply it
+title: The Dapr resource bindings building block
+description: A description of the resource bindings building block, its features, benefits, and how to apply it
 author: edwinvw
 ms.date: 12/27/2020
 ---
 
-# The Resource bindings building block
+# The resource bindings building block
 
 Cloud-based *serverless* offerings, such as Azure Functions and AWS Lambda, have gained wide adoption across the distributed architecture space. Among many benefits, they enable a microservice to *handle events from* or *invoke events in* an external system - abstracting away the underlying complexity and plumbing concerns. External resources are many: They include datastores, message systems, and web resources, across different platforms and vendors. The [Dapr resource binding building block](https://docs.dapr.io/developing-applications/building-blocks/bindings/bindings-overview/) brings these same resource binding capabilities to the doorstep of your Dapr applications.
 
@@ -25,7 +25,10 @@ Lastly, Dapr resource bindings can be easily swapped at runtime without code cha
 
 ## How it works
 
-Dapr resource binding starts with a yaml-based file called a *binding configuration*. This file describes the resource to which you'll communicate along with its binding details. Once configured, your service can receive events from the resource or trigger events on it. (Binding configurations are presented in detail later in the *Components* section.)
+Dapr resource binding starts with a component configuration file. This yaml file describes the type of resource to which you'll bind along with its configuration settings. Once configured, your service can receive events from the resource or trigger events on it.
+
+> [!NOTE]
+> Binding configurations are presented in detail later in the *Components* section.
 
 ### Input bindings
 
@@ -37,7 +40,7 @@ Input bindings trigger your code with incoming events from external resources. T
 
 Figure 8.2 describes the steps for receiving events from an external Twitter account:
 
-1. The Dapr sidecar reads the binding configuration file and subscribes to the event specified for external resource. In the example, the event source is a Twitter account.
+1. The Dapr sidecar reads the binding configuration file and subscribes to the event specified for the external resource. In the example, the event source is a Twitter account.
 2. When a matching Tweet is published on Twitter, the Dapr runtime triggers an event.
 3. The Dapr sidecar responds by invoking the endpoint (that is, event handler) configured for the binding. In the example, the service listens for an HTTP POST on the `/tweet` endpoint on port 6000. Because it's an HTTP POST operation, the JSON payload for the event is passed in the request body.
 4. After handling the event, the service returns an HTTP status code `200 OK`.
@@ -52,7 +55,6 @@ public class SomeController : ControllerBase
     public ActionResult Post(JsonElement data)
     {
         // handle tweet
-
         //...
 
         // acknowledge message
@@ -63,7 +65,7 @@ public class SomeController : ControllerBase
 }
 ```
 
-If the operation should error, you would return the appropriate 400 or 500 level HTTP status code. For bindings that feature *at-least-once-delivery* guarantees, the Dapr sidecar will retry the trigger. Check out [the documentation of the different bindings](https://github.com/dapr/docs/tree/master/concepts/bindings) to see whether they offer *at-least-once* or *exactly-once* delivery guarantees.
+If the operation should error, you would return the appropriate 400 or 500 level HTTP status code. For bindings that feature *at-least-once-delivery* guarantees, the Dapr sidecar will retry the trigger. Check out [the documentation of the different bindings](https://docs.dapr.io/operations/components/setup-bindings/supported-bindings/) to see whether they offer *at-least-once* or *exactly-once* delivery guarantees.
 
 ### Output bindings
 
@@ -76,7 +78,7 @@ Dapr also includes *output binding* capabilities. They enable your service to tr
 1. Your application invokes the `/v1.0/bindings/sms` endpoint on the Dapr sidecar. In this case, it uses an HTTP POST to invoke the API. It's also possible to use gRPC.
 2. The Dapr sidecar calls the external messaging system to send the message. The message will contain the payload passed in the POST request.
 
-As an example, the following method implements an output binding in a ASP.NET Core application:
+As an example, the following method implements an output binding in an ASP.NET Core application:
 
 ```c#
 private async Task SendSMSAsync(IHttpClientFactory clientFactory)
@@ -101,7 +103,7 @@ private async Task SendSMSAsync(IHttpClientFactory clientFactory)
 }
 ```
 
-To start, note how the previous figure uses a standard `HttpClient` object to execute an HTTP POST operation. There are no references to a specific Dapr library or SDK. Note also that the port is the same as used by the Dapr sidecar (in this case, the default HTTP port `3500`).
+To start, note how the previous figure uses a standard `HttpClient` object to execute an HTTP POST operation. There are no references to a specific Dapr library or SDK. Note also that the port is the same as used by the Dapr sidecar (in this case, the default Dapr HTTP port `3500`).
 
 The structure of the payload (that is, message sent) will vary per binding. In the example above, the payload contains a `data` element  with a message. Bindings to other types of external resources can be different, especially for the metadata that is sent. Each payload must also contain an `operation` field, that defines the operation the binding will execute. The above example specifies a  `create` operation that creates the SMS message. Common operations include:
 
@@ -114,7 +116,7 @@ The documentation for each binding describes the available operations and how to
 
 ## Using the .NET SDK
 
-The Dapr .NET SDK provides language specific support for .NET Core developers. In the following example, the call to the `HttpClient.PostAsync()` is replaced with the `DaprClient.InvokeBindingAsync()` method. This specialized method simplifies invoking a configured output resource:
+The Dapr .NET SDK provides language specific support for .NET Core developers. In the following example, the call to the `HttpClient.PostAsync()` is replaced with the `DaprClient.InvokeBindingAsync()` method. This specialized method simplifies invoking a configured output binding:
 
 ```csharp
 private async Task SendSMSAsync([FromServices] DaprClient daprClient)
@@ -161,7 +163,7 @@ spec:
 
 Each binding configuration contains a general `metadata` element with a `name` and `namespace` field. Dapr will determine the endpoint to invoke your service based upon the configured `name` field. In the above example, Dapr will invoke the method annotated with `/twitter-mention` in your service when an event occurs.
 
-In the `spec` element, you specify the `type` of the binding along with binding specific `metadata`. The example specifies credentials for accessing a Twitter account using its API. The metadata can differ between input and output bindings. For example, to use the Twitter as an input binding, you need to specify the text to search for in tweets using the `query` field. Every time a matching tweet is sent, the Dapr sidecar will invoke the `/twitter-mention` endpoint on the service. It will also deliver the contents of the Tweet
+In the `spec` element, you specify the `type` of the binding along with binding specific `metadata`. The example specifies credentials for accessing a Twitter account using its API. The metadata can differ between input and output bindings. For example, to use Twitter as an input binding, you need to specify the text to search for in tweets using the `query` field. Every time a matching tweet is sent, the Dapr sidecar will invoke the `/twitter-mention` endpoint on the service. It will also deliver the contents of the tweet.
 
 A binding can be configured for input, output, or both. Interestingly, the binding doesn't explicitly specify input or output configuration. Instead, the direction is inferred by the usage of the binding along with configuration values.
 
@@ -188,7 +190,7 @@ In this example, Dapr triggers a service by invoking the `/checkOrderBacklog` en
 
 ## Reference architecture: eShopOnDapr
 
-The accompanying eShopOnDapr reference application implements an output binding example. It triggers the Dapr [SendGrid](https://docs.dapr.io/operations/components/setup-bindings/supported-bindings/sendgrid/) binding to send a user an email when a new order is started. You can find this binding in the `eshop-email.yaml` file in the components folder:
+The accompanying eShopOnDapr reference application implements an output binding example. It triggers the Dapr [SendGrid](https://docs.dapr.io/operations/components/setup-bindings/supported-bindings/sendgrid/) binding to send a user an email when a new order is placed. You can find this binding in the `eshop-email.yaml` file in the components folder:
 
 ```yaml
 apiVersion: dapr.io/v1alpha1
@@ -208,7 +210,7 @@ auth:
 
 This configuration uses the [Twilio SendGrid](https://github.com/dapr/components-contrib/tree/master/bindings/twilio) binding component. Note how the API key for connecting to the service consumes a Dapr secret reference. This approach keeps secrets outside of the configuration file. Read the [Dapr secrets management chapter](secrets-buildingblocks.md) to learn more about Dapr secrets.
 
-The binding specifies a binding component that can be invoked using the `/sendmail` endpoint on the Dapr sidecar. Here's a code snippet in which an email is sent whenever an order is started:
+The binding configuration specifies a binding component that can be invoked using the `/sendmail` endpoint on the Dapr sidecar. Here's a code snippet in which an email is sent whenever an order is started:
 
 ```csharp
 public async Task Handle(OrderStartedDomainEvent notification, CancellationToken cancellationToken)
