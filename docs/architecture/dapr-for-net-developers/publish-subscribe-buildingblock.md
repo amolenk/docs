@@ -2,7 +2,7 @@
 title: The Dapr Publish/Subscribe building block
 description: A description of the Dapr Publish/Subscribe building-block and how to apply it
 author: edwinvw
-ms.date: 11/29/2020
+ms.date: 12/30/2020
 ---
 
 # The Publish/Subscribe building block
@@ -214,7 +214,7 @@ These components are created by the community in a [component-contrib repository
 
 ### Configuring Publish/Subscribe components
 
-Using a Dapr configuration file, you can specify the Publish/Subscribe component(s) you wish to use. The configuration contains several fields, including a **name** field. This name is important because you can configure multiple Publish/Subscribe components for Dapr to use. When you want to send or receive a message, you must include the name of the message broker to use (as we saw in the `PublishEventAsync` method signature shown earlier).
+Using a Dapr configuration file, you can specify the Publish/Subscribe component(s) to use. This configuration contains several fields. The `name` field is specifies the Publish/Subscribe components that you want to consume. Sending or receiving a message requires the name of the message broker (as you saw earlier in the `PublishEventAsync` method signature).
 
 Below you see an example of a Dapr configuration file for configuring a RabbitMQ message broker component:
 
@@ -259,7 +259,7 @@ You have to specify several elements with every subscription:
 
 ## Reference architecture: eShopOnDapr
 
-As mentioned earlier in this book, we modernized the popular [eShopOnContainers](https://github.com/dotnet-architecture/eShopOnContainers) reference architecture to support Dapr. The original eShopOnContainers app was created several years ago as end-to-end reference architecture for constructing a microservices application. We call our evolution, `eShopOnDapr`. It provides an up-to-date reference architecture to help you implement Dapr in your applications.
+As mentioned earlier in this book, we modernized the popular [eShopOnContainers](https://github.com/dotnet-architecture/eShopOnContainers) reference architecture to support Dapr. The original eShopOnContainers app was created several years ago as end-to-end reference architecture for constructing a microservices application. The evolution is named, `eShopOnDapr`. It provides an up-to-date reference architecture to help you implement Dapr in your applications.
 
 Both versions of eShop use the Publish/Subscribe pattern in several places for communicating [integration events](https://devblogs.microsoft.com/cesardelatorre/domain-events-vs-integration-events-in-domain-driven-design-and-microservices-architectures/#integration-events), for example:
 
@@ -316,7 +316,7 @@ public class DaprEventBus : IEventBus
 
         _logger.LogInformation("Publishing event {@Event} to {PubsubName}.{TopicName}", @event, DAPR_PUBSUB_NAME, topicName);
 
-        // We need to make sure that we pass the concrete type to PublishEventAsync,
+        // Make sure to pass the concrete type to PublishEventAsync,
         // which can be accomplished by casting the event to dynamic. This ensures
         // that all event fields are properly serialized.
         await _dapr.PublishEventAsync(DAPR_PUBSUB_NAME, topicName, (dynamic)@event);
@@ -326,7 +326,7 @@ public class DaprEventBus : IEventBus
 
 As you can see in the code snippet, the topic name is derived from event type's name. Because all eShop services use the `IEventBus` abstraction, retrofitting Dapr required *absolutely no change* to the mainline application code.
 
-> Note how we cast the event parameter to a C# `dynamic` type. This workaround addresses an issue found in the `System.Text.Json` serializer, the Dapr SDK uses to serialize/deserialize messages. In the eShop code, an event is sometimes explicitly declared as the base-class for events `IntegrationEvent`. This is done because the specific event-type is determined dynamically at runtime based on business-logic, as seen in the following example:
+> Note the cast of the event parameter to a C# `dynamic` type. This workaround addresses an issue found in the `System.Text.Json` serializer, the Dapr SDK uses to serialize/deserialize messages. In the eShop code, an event is sometimes explicitly declared as the base-class for events `IntegrationEvent`. This is done because the specific event-type is determined dynamically at runtime based on business-logic, as seen in the following example:
 
 ```csharp
 IntegrationEvent orderPaymentIntegrationEvent;
@@ -341,13 +341,13 @@ else
 }
 ```
 
-As a result, the event isn't serialized correctly and the message payload won't contain all the fields of the event. Our workaround circumvents the issue and correctly serializes the fields.
+As a result, the event isn't serialized correctly and the message payload won't contain all the fields of the event. The workaround circumvents the issue and correctly serializes the fields.
 
 With Dapr, the infrastructure code is **dramatically simplified**. It doesn't need to distinguish between the different message brokers. Dapr provides this abstraction for you. And if needed, you can swap out message brokers or configure multiple message broker components.
 
 ### Subscribing to events
 
-The earlier eShopOnContainers application contained *SubscriptionManagers* that handled subscription implementation. Each specific message broker that implemented `IEventBus` contained a fair amount of complex message broker-specific code for handling subscriptions. Each service that needed to receive events would have to explicitly register a handler for each event-type upon startup.
+The earlier eShopOnContainers application contained *SubscriptionManagers* that handled subscription implementation. Each specific message broker that implemented `IEventBus` contained a fair amount of complex message broker-specific code for handling subscriptions. To receive events, each service would have to explicitly register a handler for each event-type upon startup.
 
 In eShopOnDapr, we streamlined the process using Dapr ASP.NET Core libraries. For each event, we created an action method in the controller. We decorated the action method with the corresponding `Topic` attribute and the name of the topic to subscribe to. Here's a code snippet taken from the `PaymentService`:
 
