@@ -215,7 +215,7 @@ public async Task Handle(OrderStartedDomainEvent notification, CancellationToken
       { subject = $"Your eShopOnDapr order #{notification.Order.Id}" }
     };
 
-    var DaprClient = DaprClient
+    var client = new DaprClientBuilder().Build();
     await DaprClient.InvokeBindingAsync("sendmail", "create", message, metadata);
 }
 ```
