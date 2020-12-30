@@ -39,8 +39,8 @@ Input bindings trigger your code with incoming events from external resources. T
 Figure 8.2 describes the steps for receiving events from an external Twitter account:
 
 1. The Dapr sidecar reads the binding configuration file and subscribes to the event specified for the external resource. In the example, the event source is a Twitter account.
-2. When a matching Tweet is published on Twitter, the binding component running in the Dapr sidecar triggers an event.
-3. The Dapr sidecar responds by invoking the endpoint (that is, event handler) configured for the binding. In the example, the service listens for an HTTP POST on the `/tweet` endpoint on port 6000. Because it's an HTTP POST operation, the JSON payload for the event is passed in the request body.
+2. When a matching Tweet is published on Twitter, the binding component running in the Dapr sidecar picks it up and triggers an event.
+3. The Dapr sidecar invokes the endpoint (that is, event handler) configured for the binding. In the example, the service listens for an HTTP POST on the `/tweet` endpoint on port 6000. Because it's an HTTP POST operation, the JSON payload for the event is passed in the request body.
 4. After handling the event, the service returns an HTTP status code `200 OK`.
 
 The following ASP.NET Core controller provides an example of handling an event triggered by the Twitter binding:
@@ -73,10 +73,11 @@ Dapr also includes *output binding* capabilities. They enable your service to tr
 
 **Figure 8-3**. Dapr output binding.
 
-1. Your application invokes the `/v1.0/bindings/sms` endpoint on the Dapr sidecar. In this case, it uses an HTTP POST to invoke the API. It's also possible to use gRPC.
-2. The Dapr sidecar calls the external messaging system to send the message. The message will contain the payload passed in the POST request.
+1. The Dapr sidecar reads the binding configuration file with the information on how to connect to the external resource. In the example, the external resource is a Twilio SMS account.
+2. Your application invokes the `/v1.0/bindings/sms` endpoint on the Dapr sidecar. In this case, it uses an HTTP POST to invoke the API. It's also possible to use gRPC.
+3. The binding component running in the Dapr sidecar calls the external messaging system to send the message. The message will contain the payload passed in the POST request.
 
-As an example, you can invoke an output binding using curl:
+As an example, you can invoke an output binding by invoking the Dapr API using curl:
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d payload.json http://localhost:3500/v1.0/bindings/sms
