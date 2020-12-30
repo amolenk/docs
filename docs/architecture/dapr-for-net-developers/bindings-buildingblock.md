@@ -213,7 +213,6 @@ public async Task Handle(OrderStartedDomainEvent notification, CancellationToken
       { emailFrom = "eShopOn@dapr.io" },
       { emailTo = notification.UserName },
       { subject = $"Your eShopOnDapr order #{notification.Order.Id}" }
-
     };
 
     var DaprClient = DaprClient
