@@ -11,7 +11,7 @@ Cloud-based *serverless* offerings, such as Azure Functions and AWS Lambda, have
 
 ## What it solves
 
-Dapr resource bindings enable your services to integrate business operations across external resources outside of the immediate application. An event from an external system could trigger an operation in your service passing in contextual information. Your service could then expand the operation by triggering an event in another external system, passing in contextual payload information. Your service communicates without coupling or awareness of the external resource. The plumbing is encapsulated inside pre-defined Dapr components.  
+Dapr resource bindings enable your services to integrate business operations across external resources outside of the immediate application. An event from an external system could trigger an operation in your service passing in contextual information. Your service could then expand the operation by triggering an event in another external system, passing in contextual payload information. Your service communicates without coupling or awareness of the external resource. The plumbing is encapsulated inside pre-defined Dapr components. A Dapr component can be easily swapped at runtime without code changes.
 
 Consider, for example, a Twitter account that triggers an event whenever a user tweets a keyword. Your service exposes an event handler that receives and processes the tweet. Once complete, your service triggers an event that invokes an external Twilio service. Twilio sends an SMS message that includes the tweet. Figure 8-1 show the conceptual architecture of this operation.
 
@@ -20,8 +20,6 @@ Consider, for example, a Twitter account that triggers an event whenever a user 
 **Figure 8-1**. Conceptual architecture of a Dapr resource binding.
 
 At first glance, resource binding behavior may appear similar to the [Publish/Subscribe pattern](publish-subscribe-buildingblock.md) described earlier in this book. While they share similarities, there are differences. Publish/subscribe focuses on asynchronous communication between Dapr services. Resource binding has a much wider scope. It focuses on system interoperability across software platforms. Exchanging information between disparate applications, datastores, and services outside your microservice application.
-
-Lastly, Dapr resource bindings can be easily swapped at runtime without code changes.
 
 ## How it works
 
