@@ -21,10 +21,10 @@ Figure 7-1 shows the high-level architecture of the publish/subscribe pattern.
 
 From the previous figure, note the steps of the pattern:
 
-- Publishers send messages to the message broker.
-- Subscribers bind to a subscription on the message broker.
-- The message broker forwards a copy of the message to interested subscriptions.
-- Subscribers consume messages from their subscriptions.
+1. Publishers send messages to the message broker.
+2. Subscribers bind to a subscription on the message broker.
+3. The message broker forwards a copy of the message to interested subscriptions.
+4. Subscribers consume messages from their subscriptions.
 
 Most message brokers encapsulate a queueing mechanism that can persist messages once received. With it, the message broker guarantees **durability** by storing the message. Subscribers don't need to be immediately available or even online when a publisher sends a message.  Once available, the subscriber receives and processes the message.  Dapr guarantees **At-Least-Once** semantics for message delivery. Once a message is published, it will be delivered at least once to any interested subscriber.
 
@@ -44,7 +44,7 @@ Underneath the hood, your service makes a network call to a Dapr pub/sub buildin
 
 **Figure 7-2**. The Dapr Publish/Subscribe stack.
 
-The Dapr publish-subscribe building block can be invoked in a number of ways.
+The Dapr publish-subscribe building block can be invoked in many ways.
 
 At the lowest level, any programming platform can invoke the building block over HTTP or gRPC using the **Dapr native API**. To publish a message, you make the following API call:
 
@@ -66,17 +66,17 @@ curl -X POST http://localhost:3500/v1.0/publish/pubsub/newOrder \
   -d '{ "orderId": "1234", "productId": "5678", "amount": 2 }'
 ```
 
-You receive messages by subscribing to a topic. At startup, he Dapr runtime will call your application on a well-known endpoint to identify and create the required subscriptions:
+You receive messages by subscribing to a topic. At startup, the Dapr runtime will call the application on a well-known endpoint to identify and create the required subscriptions:
 
 ``` http
 http://localhost:<appPort>/dapr/subscribe
 ```
 
-- `<appPort>` informs the Dapr sidecar of the port upon which your application is listening.
+- `<appPort>` informs the Dapr sidecar of the port upon which the application is listening.
 
 You can implement this endpoint yourself. But Dapr provides more intuitive ways of implementing it. We'll address this functionality later in this chapter.
 
-The response from the call contains a list of topics to which the applications will subscribe. Each includes an endpoint to call when a message comes in on that topic. Here's an example of a response:
+The response from the call contains a list of topics to which the applications will subscribe. Each includes an endpoint to call when the topic receives a message. Here's an example of a response:
 
 ```json
 [
@@ -214,7 +214,7 @@ These components are created by the community in a [component-contrib repository
 
 ### Configuring Publish/Subscribe components
 
-Using a Dapr configuration file, you can specify the Publish/Subscribe component(s) to use. This configuration contains several fields. The `name` field is specifies the Publish/Subscribe components that you want to consume. Sending or receiving a message requires the name of the message broker (as you saw earlier in the `PublishEventAsync` method signature).
+Using a Dapr configuration file, you can specify the Publish/Subscribe component(s) to use. This configuration contains several fields. The `name` field specifies the Publish/Subscribe components that you want to consume. Sending or receiving a message requires the name of the message broker (as you saw earlier in the `PublishEventAsync` method signature).
 
 Below you see an example of a Dapr configuration file for configuring a RabbitMQ message broker component:
 
@@ -259,15 +259,13 @@ You have to specify several elements with every subscription:
 
 ## Reference architecture: eShopOnDapr
 
-As mentioned earlier in this book, we modernized the popular [eShopOnContainers](https://github.com/dotnet-architecture/eShopOnContainers) reference architecture to support Dapr. The original eShopOnContainers app was created several years ago as end-to-end reference architecture for constructing a microservices application. The evolution is named, `eShopOnDapr`. It provides an up-to-date reference architecture to help you implement Dapr in your applications.
-
-Both versions of eShop use the Publish/Subscribe pattern in several places for communicating [integration events](https://devblogs.microsoft.com/cesardelatorre/domain-events-vs-integration-events-in-domain-driven-design-and-microservices-architectures/#integration-events), for example:
+As mentioned earlier in an earlier chapter, the [eShopOnDapr](https://github.com/dotnet-architecture/eShopOnDapr) app provides an end-to-end reference architecture for constructing a microservices application implementing Dapr. eShopOnDapr is an evolution of the widely popular [eShopOnContainers](https://github.com/dotnet-architecture/eShopOnContainer) app, created several years ago. Both versions use the Publish/Subscribe pattern for communicating [integration events](https://devblogs.microsoft.com/cesardelatorre/domain-events-vs-integration-events-in-domain-driven-design-and-microservices-architectures/#integration-events) across microservices, including the following actions:
 
 - When a user checks-out a shopping basket.
 - When a payment for an order has succeeded.
 - When the grace-period of a purchase has expired.
 
-In the earlier eShopOnContainers, the Publish/Subscribe pattern was implemented using an *IEventBus* abstraction:
+Eventing in both versions of eShop is based on an `IEventBus` interface. In the earlier eShopOnContainers, the `IEventBus` was complex:
 
 ```csharp
 public interface IEventBus
@@ -280,11 +278,9 @@ public interface IEventBus
 }
 ```
 
-Multiple concrete implementations were built for this abstraction,  including RabbitMQ and Azure Service Bus. Each implementation includes a great deal of custom plumbing code that was complex and difficult to maintain.
+Concrete implementations were built on top of `IEventBus` to support both RabbitMQ or Azure Service Bus. Each implementation included a great deal of custom plumbing code that was complex and difficult to maintain.
 
-### Publishing events
-
-In the updated eShopOnDapr, we replaced the entire Publish/Subscribe implementation with Dapr. This refactoring was straightforward. We minimized the existing `IEventBus` abstraction, so it only contains a method for publishing events:
+The newer eShopOnDapr significantly simplifies Publish/Subscribe behavior by using Dapr. For example, the `IEventBus` interface was reduced to a single method for publishing events:
 
 ```csharp
 public interface IEventBus
@@ -293,7 +289,9 @@ public interface IEventBus
 }
 ```
 
-To implement the `IEventBus` abstraction, a single `DaprEventBus` implementation was created. It uses the Dapr client to publish an event:
+### Publishing events
+
+In the updated eShopOnDapr, a single `DaprEventBus` implementation supports any Dapr-supported message broker. The following code block shows the simplified Publish method. Note how it uses the Dapr client to publish an event:
 
 ```csharp
 public class DaprEventBus : IEventBus
@@ -324,32 +322,17 @@ public class DaprEventBus : IEventBus
 }
 ```
 
-As you can see in the code snippet, the topic name is derived from event type's name. Because all eShop services use the `IEventBus` abstraction, retrofitting Dapr required *absolutely no change* to the mainline application code.
+In the `DaprClient.PublishEventAsync` method, the second argument specifies the topic name. Note how it's derived from the name of the event type. Because all eShop services use the `IEventBus` abstraction, retrofitting Dapr required *absolutely no change* to the mainline application code.
 
-> Note the cast of the event parameter to a C# `dynamic` type. This workaround addresses an issue found in the `System.Text.Json` serializer, the Dapr SDK uses to serialize/deserialize messages. In the eShop code, an event is sometimes explicitly declared as the base-class for events `IntegrationEvent`. This is done because the specific event-type is determined dynamically at runtime based on business-logic, as seen in the following example:
-
-```csharp
-IntegrationEvent orderPaymentIntegrationEvent;
-
-if (_settings.PaymentSucceeded && (!_settings.MaxOrderTotal.HasValue || @event.Total < _settings.MaxOrderTotal ))
-{
-    orderPaymentIntegrationEvent = new OrderPaymentSucceededIntegrationEvent(@event.OrderId);
-}
-else
-{
-    orderPaymentIntegrationEvent = new OrderPaymentFailedIntegrationEvent(@event.OrderId);
-}
-```
-
-As a result, the event isn't serialized correctly and the message payload won't contain all the fields of the event. The workaround circumvents the issue and correctly serializes the fields.
+> Due to an issue in the `System.Text.Json` serializer at the time of this writing, the third argument is casted to a C# `dynamic` type. Without the workaround, the event isn't serialized correctly and the message payload won't contain all the fields of the event.
 
 With Dapr, the infrastructure code is **dramatically simplified**. It doesn't need to distinguish between the different message brokers. Dapr provides this abstraction for you. And if needed, you can swap out message brokers or configure multiple message broker components.
 
 ### Subscribing to events
 
-The earlier eShopOnContainers application contained *SubscriptionManagers* that handled subscription implementation. Each specific message broker that implemented `IEventBus` contained a fair amount of complex message broker-specific code for handling subscriptions. To receive events, each service would have to explicitly register a handler for each event-type upon startup.
+The earlier eShopOnContainers app contained *SubscriptionManagers* to handle the subscription implementation for each message broker. Each manager contained complex message broker-specific code for handling subscriptions. To receive events, each service would have to explicitly register a handler for each event-type.
 
-In eShopOnDapr, we streamlined the process using Dapr ASP.NET Core libraries. For each event, we created an action method in the controller. We decorated the action method with the corresponding `Topic` attribute and the name of the topic to subscribe to. Here's a code snippet taken from the `PaymentService`:
+eShopOnDapr streamlines the plumbing for event subscription by using Dapr ASP.NET Core libraries. Each event is handled by an action method in the controller. A `Topic` attribute decorates the corresponding action method with the name of the topic to subscribe to. Here's a code snippet taken from the `PaymentService`:
 
 ```csharp
 [Route("api/v1/[controller]")]
@@ -375,7 +358,7 @@ public class IntegrationEventController : ControllerBase
 }
 ```
 
-In the previous code snippet, note how the event type's name is used as the topic to which to subscribe. The `OrderStatusChangedToValidatedIntegrationEventHandler` is an event-handler that already exists in eShopOnContainers. Because Dapr implements the plumbing around subscriptions and message brokers, a large amount of original code became obsolete and was removed from the code-base. Much of this code was complex and challenging to maintain.
+Note in the `Topic` attribute how the name of the event type is used as the topic name to which to subscribe. Then, an event handler that existed in the earlier eShopOnContainers code base is invoked. In the previous example, messages received from the `OrderStatusChangedToValidatedIntegrationEvent` topic invoke the existing  `OrderStatusChangedToValidatedIntegrationEventHandler` event-handler. Because Dapr implements the underlying plumbing for subscriptions and message brokers, a large amount of original code became obsolete and was removed from the code-base. Much of this code was complex to understand and challenging to maintain.
 
 ### Using Publish/Subscribe components
 
