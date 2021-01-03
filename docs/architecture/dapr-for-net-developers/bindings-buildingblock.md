@@ -111,7 +111,7 @@ private async Task SendSMSAsync([FromServices] DaprClient daprClient)
 {
     var string message = "Welcome to this awesome service";
     var metadata = new Dictionary<string,string> { { "toNumber", "555-3277"} };
-    await DaprClient.InvokeBindingAsync("sms", "create", message, metadata);
+    await daprClient.InvokeBindingAsync("sms", "create", message, metadata);
 }
 ```
 
@@ -201,7 +201,7 @@ This configuration uses the [Twilio SendGrid](https://github.com/dapr/components
 The binding configuration specifies a binding component that can be invoked using the `/sendmail` endpoint on the Dapr sidecar. Here's a code snippet in which an email is sent whenever an order is started:
 
 ```csharp
-public async Task Handle(OrderStartedDomainEvent notification, CancellationToken cancellationToken)
+public Task Handle(OrderStartedDomainEvent notification, CancellationToken cancellationToken)
 {
     var string message = CreateEmailBody(notification);
     var metadata = new Dictionary<string,string> { 
@@ -210,8 +210,7 @@ public async Task Handle(OrderStartedDomainEvent notification, CancellationToken
       { subject = $"Your eShopOnDapr order #{notification.Order.Id}" }
     };
 
-    var client = new DaprClientBuilder().Build();
-    await DaprClient.InvokeBindingAsync("sendmail", "create", message, metadata);
+    return _daprClient.InvokeBindingAsync("sendmail", "create", message, metadata, cancellationToken);
 }
 ```
 
