@@ -80,19 +80,15 @@ Dapr also includes *output binding* capabilities. They enable your service to tr
 As an example, you can invoke an output binding by invoking the Dapr API using curl:
 
 ```bash
-curl -X POST -H "Content-Type: application/json" -d payload.json http://localhost:3500/v1.0/bindings/sms
-```
-
-This is the content of the `payload.json` file:
-
-```json
-{
-  "data": "Welcome to this awesome service",
-  "metadata": {
-    "toNumber": "555-3277"
-  },
-  "operation": "create"
-}
+curl -X POST http://localhost:3500/v1.0/bindings/sms \
+  -H "Content-Type: application/json" \
+  -d '{
+        "data": "Welcome to this awesome service",
+        "metadata": {
+          "toNumber": "555-3277"
+        },
+        "operation": "create"
+      }'
 ```
 
 Note that the HTTP port is the same as used by the Dapr sidecar (in this case, the default Dapr HTTP port `3500`).
