@@ -214,7 +214,7 @@ These components are created by the community in a [component-contrib repository
 
 ### Configuring Publish/Subscribe components
 
-Using a Dapr configuration file, you can specify the Publish/Subscribe component(s) to use. This configuration contains several fields. The `name` field specifies the Publish/Subscribe components that you want to consume. Sending or receiving a message requires the name of the message broker (as you saw earlier in the `PublishEventAsync` method signature).
+Using a Dapr configuration file, you can specify the Publish/Subscribe component(s) to use. This configuration contains several fields. The `name` field specifies the Publish/Subscribe component that you want to use. When sending or receiving a message, you need to specify this name (as you saw earlier in the `PublishEventAsync` method signature).
 
 Below you see an example of a Dapr configuration file for configuring a RabbitMQ message broker component:
 
@@ -263,9 +263,9 @@ As mentioned earlier in an earlier chapter, the accompanying [eShopOnDapr](https
 
 - When a user checks-out a shopping basket.
 - When a payment for an order has succeeded.
-- When the grace-period of a purchase has expired
+- When the grace-period of a purchase has expired.
 
-Eventing in both versions of eShop is based on an `IEventBus` interface. In the earlier eShopOnContainers, the `IEventBus` was complex:
+Eventing in eShopOnContainers is based on the following `IEventBus` interface:
 
 ```csharp
 public interface IEventBus
@@ -278,7 +278,7 @@ public interface IEventBus
 }
 ```
 
-In the earlier eShopOnContainers, concrete eventing implementations were built on top of `IEventBus` to support both RabbitMQ and Azure Service Bus. Each implementation included a great deal of custom plumbing code that was complex to understand and difficult to maintain.
+Concrete implementations of this interface exist in eShopOnContainers for both RabbitMQ and Azure Service Bus. Each implementation included a great deal of custom plumbing code that was complex to understand and difficult to maintain.
 
 The newer eShopOnDapr significantly simplifies Publish/Subscribe behavior by using Dapr. For example, the `IEventBus` interface was reduced to a single method:
 
@@ -330,9 +330,9 @@ With Dapr, the infrastructure code is **dramatically simplified**. It doesn't ne
 
 ### Subscribing to events
 
-The earlier eShopOnContainers app contained *SubscriptionManagers* to handle the subscription implementation for each message broker. Each manager contained complex message broker-specific code for handling subscription events. To receive events, each service would have to explicitly register a handler for each event-type.
+The earlier eShopOnContainers app contains *SubscriptionManagers* to handle the subscription implementation for each message broker. Each manager contains complex message broker-specific code for handling subscription events. To receive events, each service has to explicitly register a handler for each event-type.
 
-eShopOnDapr streamlines the plumbing for event subscription by using Dapr ASP.NET Core libraries. Each event is handled by an action method in the controller. A `Topic` attribute decorates the action method with the name of the corresponding topic to subscribe to. Here's a code snippet taken from the `PaymentService`:
+eShopOnDapr streamlines the plumbing for event subscriptions by using Dapr ASP.NET Core libraries. Each event is handled by an action method in the controller. A `Topic` attribute decorates the action method with the name of the corresponding topic to subscribe to. Here's a code snippet taken from the `PaymentService`:
 
 ```csharp
 [Route("api/v1/[controller]")]
@@ -362,7 +362,7 @@ Note in the `Topic` attribute how the name of the event type is used as the topi
 
 ### Using Publish/Subscribe components
 
-Within the eShopOnDapr repository, a `deployment` folder contains files for deploying the application using different deployment modes: `Docker Compose` and `Kubernetes`. A `dapr` folder exists within each of these folders that holds a `components` folder. This folder holds a file `eshop-pubsub.yaml` containing the configuration of the Dapr Publish/Subscribe component that application will use for Publish/Subscribe behavior. As you saw in the earlier code snippets, the name of the Publish/Subscribe component used is `pubsub`. Here's the content of the `eshop-pubsub.yaml` file in the `deployment/compose/dapr/components` folder:
+Within the eShopOnDapr repository, a `deployment` folder contains files for deploying the application using different deployment modes: `Docker Compose` and `Kubernetes`. A `dapr` folder exists within each of these folders that holds a `components` folder. This folder holds a file `eshop-pubsub.yaml` containing the configuration of the Dapr Publish/Subscribe component that the application will use for Publish/Subscribe behavior. As you saw in the earlier code snippets, the name of the Publish/Subscribe component used is `pubsub`. Here's the content of the `eshop-pubsub.yaml` file in the `deployment/compose/dapr/components` folder:
 
 ```yaml
 apiVersion: dapr.io/v1alpha1
