@@ -12,28 +12,28 @@ In almost every application, you have to deal with information that you should n
 - an API key for calling an external RESTful API or
 - a client certificate for authenticating to some external system.
 
-Often, you make these values configurable so you can vary them per deployment environment. A popular way of doing this is to store them in an external settings-file that will be read by the application at runtime. But how do you make sure you do not disclose the secrets in the settings-file? A common mistake often made is pushing the settings-file with the secrets to a public Git repository.
+Often, you make these values configurable so you can vary them per deployment environment. A popular way of doing this is to store them in an external settings file that will be read by the application at runtime. But how do you make sure you do not disclose the secrets in the settings file? A common mistake is pushing the settings file with the secrets to a public Git repository.
 
-Dapr offers a Secrets Management building block that prevents this and significantly simplifies working with secrets.
+Dapr offers a secrets management building block that prevents this and significantly simplifies working with secrets.
 
 ## What it solves
 
 A popular solution to working with secrets is using a secrets management tool like **Hashicorp Vault** or **Azure Key Vault**. These tools allow you to centrally store the actual secrets securely and reference them from your application. Access to the secrets is secured using some form of authentication and authorization, so only an application with sufficient rights can access them. When running your application in Kubernetes, you can also leverage its built-in secrets management mechanism.
 
-It's great to see that several secrets management tools exist. But you need to know the differences between them. You are also required to learn all the specific APIs or SDKs they offer to use them from your code. This is where Dapr comes in.
+It's great that these secrets management tools exist. But you need to know the differences between them. You are also required to learn all the specific APIs or SDKs they offer to use them from your code. This is where Dapr comes in.
 
-The Dapr Secrets Management building block offers an abstraction for working with secrets. You can use the abstraction from your code. Hence, you do not need to learn how to interact with the different secrets management tools. This is all handled by Dapr.
+The Dapr secrets management building block offers an abstraction for working with secrets. You can use the abstraction from your code. Hence, you do not need to learn how to interact with the different secrets management tools. This is all handled by Dapr.
 
 ## How it works
 
-You can leverage the Secrets Management building block in two ways:
+You can leverage the secrets management building block in two ways:
 
 - Call it from your application code to retrieve a secret.
 - Reference a secret from a Dapr component configuration.
 
 We'll address referencing a secret from a Dapr component configuration later. First, we'll address calling the building block from your application code.
 
-As with the other building blocks, the Dapr sidecar offers an API for you to interact with the Secrets Management building block. You can call this API using HTTP or gRPC. This is the URL of the API:
+As with the other building blocks, the Dapr sidecar offers an API for you to interact with the secrets management building block. You can call this API using HTTP or gRPC. This is the URL of the API:
 
 ```http
 http://localhost:<daprPort>/v1.0/secrets/<secret-store-name>/<name>?<metadata>
@@ -58,7 +58,7 @@ Here's an example of how Dapr handles a request on the secrets management API:
 2. The Dapr sidecar retrieves the specified secret from the secrets store.
 3. The Dapr sidecar sends the secret information to the service.
 
-Some secret stores support storing multiple key-value pairs in a secret. In that case, you receive all the keys and values in a single JSON response like in the following example:
+Some secret stores support storing multiple key/value pairs in a secret. In that case, you receive all the keys and values in a single JSON response like in the following example:
 
 ```http
 GET http://localhost:3500/v1.0/secrets/secrets-store/interestRates?metadata.version_id=3
@@ -74,7 +74,7 @@ GET http://localhost:3500/v1.0/secrets/secrets-store/interestRates?metadata.vers
 
 ## Using the Dapr .NET SDK
 
-Getting secrets using the Dapr .NET SDK is pretty straightforward. The DaprClient offers a method `GetSecretAsync` for retrieving secrets using the Secrets Management building block. In the following code-snippet, the connection-string for connecting to a Sql Server database is retrieved:
+Getting secrets using the Dapr .NET SDK is pretty straightforward. The `DaprClient` class offers a method `GetSecretAsync` for retrieving secrets using the secrets management building block. In the following code snippet, the connection string for connecting to a SQL Server database is retrieved:
 
 ```csharp
 Dictionary<string, string> metadata = new Dictionary<string, string> { { "version_id", "3" } };
@@ -82,9 +82,9 @@ Dictionary<string,string> secrets = await daprClient.GetSecretAsync("secrets-sto
 string connectionString = secrets["customerdb"];
 ```
 
-You need to specify the name of the secret store component to use and the name of the secret you want to retrieve. The metadata is optional and differs per secret store. Notice that you always receive a dictionary as result. This is because some secret stores support storing multiple key-value pairs in a secret. In the example, we extract the secret named `customerdb` to get the connection-string.
+You need to specify the name of the secret store component to use and the name of the secret you want to retrieve. The metadata is optional and differs per secret store. Notice that you always receive a dictionary as result. This is because some secret stores support storing multiple key/value pairs in a secret. In the example, we extract the secret named `customerdb` to get the connection-string.
 
-The .NET SDK also offers a .NET configuration provider for working with secrets. The provider is available in the *Dapr.Extensions.Configuration* nuget package. In the following code-snippet, you see an example of registering the secrets configuration provider in the `Program.cs` of an ASP.NET WebAPI application:  
+The .NET SDK also offers a .NET configuration provider for working with secrets. The provider is available in the *Dapr.Extensions.Configuration* NuGet package. In the following code snippet, you see an example of registering the secrets configuration provider in the `Program.cs` of an ASP.NET Web API application:  
 
 ```csharp
 public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -104,7 +104,7 @@ public static IHostBuilder CreateHostBuilder(string[] args) =>
         });
 ```
 
-Notice how you need to specify a `DaprClient` when registering the provider. The client is used to invoke the secrets API on the Dapr sidecar of the application. You also need to specify the name of the secrets management component to use. Finally, you have to specify which secrets to retrieve by passing in a list of `DaprSecretDescriptor` instances. A `DaprSecretDescriptor` contains a secret name and optionally a dictionary containing secret metadata.
+You need to specify a `DaprClient` when registering the provider. The client is used to invoke the secrets API on the Dapr sidecar of the application. You also need to specify the name of the secrets management component to use. Finally, you have to specify which secrets to retrieve by passing in a list of `DaprSecretDescriptor` instances. A `DaprSecretDescriptor` contains a secret name and optionally a dictionary containing secret metadata.
 
 Once this configuration provider is registered, it will retrieve the specified secrets and add them to the .NET configuration. Now you're able to get them in your application code:
 
@@ -371,6 +371,7 @@ auth:
 
 Now the eShop services running in Kubernetes can retrieve the Redis password from the Azure Key Vault.
 
+> [!IMPORTANT]
 > It is crucial to keep the file containing the public and private key-pair for the X509 certificate of the service principal in a safe place. One way of doing this, is to make sure you place the file in a well-known folder outside the source-code repository. This well-known folder can then be used in the configuration file. On your local dev machine, you place the certificate in this folder. On the machine where the application will be deployed, the certificate is placed in this folder by an automated deployment pipeline. Also, it is a best practice to use a different service principal per environment. This ensures that the service principal used by the developers in the DEV environment cannot be used to access secrets for the PRODUCTION environment.
 
 ### Scoping secrets
