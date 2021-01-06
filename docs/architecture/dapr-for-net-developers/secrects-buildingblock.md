@@ -374,6 +374,8 @@ Now the eShop services running in Kubernetes can retrieve the Redis password fro
 > [!IMPORTANT]
 > It is crucial to keep the file containing the public and private key-pair for the X509 certificate of the service principal in a safe place. One way of doing this, is to make sure you place the file in a well-known folder outside the source-code repository. This well-known folder can then be used in the configuration file. On your local dev machine, you place the certificate in this folder. On the machine where the application will be deployed, the certificate is placed in this folder by an automated deployment pipeline. Also, it is a best practice to use a different service principal per environment. This ensures that the service principal used by the developers in the DEV environment cannot be used to access secrets for the PRODUCTION environment.
 
+When running in AKS, it's also possible to use an Azure managed identity for authenticating against Azure Key Vault.
+
 ### Scoping secrets
 
 Secret scopes allow you to control which secrets your application can access. You configure this in the Dapr sidecar configuration you can specify when running your application with Dapr. See [Dapr sidecar configuration documentation](https://v1-rc2.docs.dapr.io/operations/configuration/configuration-overview/) for instructions on how to specify a configuration file when starting an application.
@@ -486,8 +488,6 @@ The `DaprClient` in the Dapr .NET SDK provides a method to retrieve secrets. The
 You can retrieve secrets in your application code or reference them from other Dapr component configuration files.
 
 You can use secret scopes to control access to specific secrets.
-
-### References
 
 >[!div class="step-by-step"]
 >[Previous](observability.md)
