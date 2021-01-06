@@ -1,11 +1,10 @@
 ---
-title: The Secrets Management building block
-description: A description of the Secrets Management building block and how to apply it
+title: The Dapr secrets management building block
+description: A description of the secrets management building block and how to apply it
 author: edwinvw
 ms.date: 12/20/2020
----
 
-# The Secrets Management building block
+# The Dapr secrets management building block
 
 In almost every application, you have to deal with information that you should not disclose because of security reasons. Here are some examples:
 
@@ -40,29 +39,29 @@ As with the other building blocks, the Dapr sidecar offers an API for you to int
 http://localhost:<daprPort>/v1.0/secrets/<secret-store-name>/<name>?<metadata>
 ```
 
-Note the Dapr specific URL segments:
+The URL contains the following segments:
 
 - `<daprPort>` provides the port number upon which the Dapr sidecar is listening.
 - `<secret-store-name>` provides the name of the selected Dapr secrets management component.
 - `<name>` provides the name of the secret you want to retrieve.
 - `<metadata>` provides metadata of the secret you want to retrieve. This is optional, and the available metadata properties will differ per secret store. See the [secrets management API reference]([Secrets API reference | Dapr Docs](https://docs.dapr.io/reference/api/secrets_api/)) for more information about the available metadata properties.
 
-The JSON response you will receive contains the key and the value of the secret. Here's an example:
+The JSON response you will receive contains the key and the value of the secret.
 
-```http
-GET http://localhost:3500/v1.0/secrets/secrets-store/eshopsecrets?metadata.version_id=3
-```
+Here's an example of how Dapr handles a request on the secrets management API:
 
-```json
-{
-  "customerdb": "Server=sqlsrv-p-06;Database=CRM;User Id=sql_p_customer;Password=h8%fa51Km9D4;"
-}
-```
+![Diagram of retrieving a secret using the Dapr secrets management API.](media/secrets-management/retrieve-secret.png)
+
+**Figure 10-1**. Retrieving a secret using the Dapr secrets management API
+
+1. The service calls the Dapr secrets management API. It specifies the name of the secrets store and the name of the secret to retrieve.
+2. The Dapr sidecar retrieves the specified secret from the secrets store.
+3. The Dapr sidecar sends the secret information to the service.
 
 Some secret stores support storing multiple key-value pairs in a secret. In that case, you receive all the keys and values in a single JSON response like in the following example:
 
 ```http
-GET http://localhost:3500/v1.0/secrets/secrets-store/interestRates
+GET http://localhost:3500/v1.0/secrets/secrets-store/interestRates?metadata.version_id=3
 ```
 
 ```json
@@ -73,7 +72,7 @@ GET http://localhost:3500/v1.0/secrets/secrets-store/interestRates
 }
 ```
 
-### Using the Dapr .NET SDK
+## Using the Dapr .NET SDK
 
 Getting secrets using the Dapr .NET SDK is pretty straightforward. The DaprClient offers a method `GetSecretAsync` for retrieving secrets using the Secrets Management building block. In the following code-snippet, the connection-string for connecting to a Sql Server database is retrieved:
 
@@ -116,7 +115,7 @@ public void GetCustomer(IConfiguration config)
 }
 ```
 
-### Secrets Management components
+## Secrets management components
 
 Several Dapr components exist for implementing the Secrets Management building block. Each component uses a particular secret store. At the time of writing, Dapr supports the following set of secret stores:
 
@@ -132,7 +131,7 @@ Several Dapr components exist for implementing the Secrets Management building b
 
 The following section will show how to configure a secrets management component for your application.
 
-### Configuring Secrets Management components
+### Configuration (TODO Move generic text to getting started)
 
 You configure a Secrets Management component using a Dapr configuration file. Here you see the structure of a config file:
 
@@ -171,7 +170,7 @@ spec:
 
 Notice the clear-text password for connecting to the Redis server in this configuration file. This is not a secure way of dealing with a password. If you were to push this config file to a public Github repo for instance, you have disclosed the password. To make this more secure, we could store the password in a secret store. We will show how to do this with a couple of examples.
 
-#### Local file
+### Local file
 
 In the first example, we will use the local file component. As stated, this is only suitable for development scenarios. First, we create a JSON file named `eshop-secrets.json` that contains the secrets. Here's an example:
 
@@ -248,7 +247,7 @@ Notice that we use a `secretKeyRef` instead of a literal value for the password.
 
 You might wonder why `eShopRedisPassword` is used both for the name as well as for the key in the secret reference. This is because the secrets are not identified by a separate name when using the local file secret store. This is different in the next example, where we use Kubernetes secrets.
 
-#### Kubernetes secret
+### Kubernetes secret
 
 For this second example, we will assume the application is running in Kubernetes. We'll use the built-in secrets mechanism in Kubernetes for storing the secret. First, we use the Kubernetes CLI to create a secret named `eshop-redis-secret` that contains the password:
 
@@ -281,7 +280,7 @@ Notice that we use a `secretKeyRef` instead of a literal value for the password.
 
 In a production setting, you would never create the secret as we did in the example. Typically, secrets are created as part of some automated CI/CD pipeline. This ensures that only people with sufficient access to this pipeline can access and change the secrets. Developers creating Dapr configuration files for deploying an application can then reference the secrets without knowing the actual values.
 
-#### Azure Key Vault
+### Azure Key Vault
 
 The next example will be a bit more elaborate and more geared toward a production scenario. We'll use **Azure Key Vault** as the secret store. Azure Key Vault is an Azure service that allows you to store secrets in the cloud securely.
 
@@ -296,7 +295,7 @@ Check out the [Dapr Azure Key Vault secret store documentation](https://docs.dap
 
 To use the Azure Key Vault as the secret store from eShop, we must create a component configuration file.
 
-##### Running in stand-alone mode
+#### Running in stand-alone mode
 
 When running the application with Dapr in stand-alone mode, the configuration file looks like this:
 
@@ -331,7 +330,7 @@ Notice the type of the secrets management component is `secretstores.azure.keyva
 
 Now the eShop services can retrieve the Redis password from the Azure Key Vault.
 
-##### Running on Kubernetes
+#### Running on Kubernetes
 
 When running your application with Dapr on Kubernetes, you can also use the service principal to authenticate against the Azure Key Vault. You can create a Kubernetes secret that contains the certificate file using the Kubernetes CLI tool:
 
@@ -374,9 +373,9 @@ Now the eShop services running in Kubernetes can retrieve the Redis password fro
 
 > It is crucial to keep the file containing the public and private key-pair for the X509 certificate of the service principal in a safe place. One way of doing this, is to make sure you place the file in a well-known folder outside the source-code repository. This well-known folder can then be used in the configuration file. On your local dev machine, you place the certificate in this folder. On the machine where the application will be deployed, the certificate is placed in this folder by an automated deployment pipeline. Also, it is a best practice to use a different service principal per environment. This ensures that the service principal used by the developers in the DEV environment cannot be used to access secrets for the PRODUCTION environment.
 
-#### Scoping secrets
+### Scoping secrets
 
-Secret scopes allow you to control which secrets your application can access. You configure this in the Dapr sidecar configuration you can specify when running your application with Dapr. See [Dapr sidecar configuration documentation](https://v1-rc2.docs.dapr.io/operations/configuration/configuration-overview/) for instructions on how to specify a configuration file when starting an application. 
+Secret scopes allow you to control which secrets your application can access. You configure this in the Dapr sidecar configuration you can specify when running your application with Dapr. See [Dapr sidecar configuration documentation](https://v1-rc2.docs.dapr.io/operations/configuration/configuration-overview/) for instructions on how to specify a configuration file when starting an application.
 
 Here's an example of a Dapr sidecar configuration file that contains secret scopes:
 
