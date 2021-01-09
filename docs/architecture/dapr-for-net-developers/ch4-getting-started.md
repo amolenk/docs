@@ -29,7 +29,7 @@ Now that Dapr is installed in your local environment, let's build your first Dap
 
 ## Building your first Dapr application
 
-In this walkthrough, we'll show you how to build a basic .NET Console application that uses the Dapr State Management building block.
+In this walkthrough, you'll build a simple .NET Console application that uses the Dapr State Management building block.
 
 To complete this walkthrough, you'll also need to install the [.NET Core 3 Development Tools](https://dotnet.microsoft.com/download/dotnet-core/3.1) for development with .NET Core 3.1.
 
@@ -101,11 +101,11 @@ While you can call Dapr APIs with the native Dapr HTTP and gRPC SDKs, it's much 
 
    The updated code performs the following steps:
 
-   - First we create a new `DaprClient` instance. The .NET `DaprClient` class can be used for most interactions with the Dapr sidecar.
-   - Then we use that `DaprClient` instance to load the state with key `counter` from the state store. If there isn't any state stored yet for that key, we'll get back the default `int` value which is `0`.
-   - Finally, we enter a loop that continuously writes the current `counter` value to the console, increments the value, and saves it back to the state store.
+   - First a new `DaprClient` instance is instantiated. This class is used for most interactions with Dapr sidecars.
+   - From the state store, `DaprClient.GetStateAsync` fetches the value for the `counter` key. If the key does exist, the default `int` value (which is `0`) is returned.
+   - Then the code iterates, writing the `counter` value to the console and saving an incremented value to the state store.
 
-3. To run the application, you must use the Dapr CLI `run` command. It enables you to run the application and the Dapr sidecar together. You'll also need to name your application by specifying an application id. If you don't specify an application id, Dapr will generate a unique value for you. This will cause problems with the State Management building block because it uses the application id as a prefix for the state keys. This means that if your application id changes, you will no longer be able to access any previously stored state.
+3. To run the application, you must use the Dapr CLI `run` command. It invokes the underlying Dapr runtime, enabling the application and Dapr sidecar to run together. You'll also need to name your application by specifying an application id. If you don't specify an application id, Dapr will generate a unique value for you. This will cause problems with the State Management building block because it uses the application id as a prefix for the state keys. This means that if your application id changes, you will no longer be able to access any previously stored state.
 
    Now run the application:
 
