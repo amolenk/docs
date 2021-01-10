@@ -232,7 +232,7 @@ Once the application is started, the Dapr sidecars will start emitting telemetry
 
  **Figure 9-1**: The Zipkin start page
 
-On the *Find a trace* page, you can query traces. Pressing the *RUN QUERY* button without specifying any restrictions will show all the ingested *traces*, as shown in Figure 9-3:
+On the *Find a trace* tab, you can query traces. Pressing the *RUN QUERY* button without specifying any restrictions will show all the ingested *traces*, as shown in Figure 9-3:
 
 ![A list of traces](media/observability/zipkin-traces-overview.png)
 
@@ -248,7 +248,7 @@ Each item on the details page, represents a span that is part of the selected tr
 
 ##### Inspect the dependencies between services
 
-Because Dapr sidecars handle all traffic between the services, Zipkin can use the trace information to determine the dependencies between the services. To see this in action, go to the `Dependencies` tab on the Zipkin web page and click the button with the magnifying glass. Zipkin will show an overview of all the services and their dependencies, as seen in Figure 9-5:
+Because Dapr sidecars handle all traffic between the services, Zipkin can use the trace information to determine the dependencies between the services. To see this in action, go to the *Dependencies* tab on the Zipkin web page and click the button with the magnifying glass. Zipkin will show an overview of all the services and their dependencies, as seen in Figure 9-5:
 
 ![A dependency graph in Zipkin](media/observability/zipkin-dependencies.png)
 
