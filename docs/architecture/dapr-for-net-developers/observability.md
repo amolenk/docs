@@ -14,7 +14,7 @@ The information used to gain observability is often referred to as **telemetry**
 1. **End-to-end tracing**. Tracing gives insight into the traffic between the services and which services are involved in distributed transactions to execute some business scenario.
 1. The **health status** of the services. Health status gives insight into the availability of the services.
 
-Whether or not all categories of telemetry are available depends on the observability features offered by the platform your application runs on. An example of a platform that offers all the categories is Microsoft Azure, for instance. Azure offers a service called **Application Insights**. This service is automatically enabled for most of the available Azure IaaS and PaaS services. When an application is built using these Azure services, telemetry is gathered automatically and sent to App Insights. This includes logging from the application code, exceptions that occurred in the code, metrics on the resource utilization of the services, duration and status-code of all requests sent to service and more. App Insights is even capable of automatically drawing a diagram with the dependencies between services based on their communication.
+Whether or not all telemetry categories are available depends on the observability features offered by the platform your application runs on. An example of a platform that offers all the categories is Microsoft Azure, for instance. Azure offers a service called **Application Insights**. This service is automatically enabled for most of the available Azure IaaS and PaaS services. When an application is built using these Azure services, telemetry is gathered automatically and sent to App Insights. This includes logging from the application code, exceptions that occurred in the code, metrics on the resource utilization of the services, duration and status-code of all requests sent to service and more. App Insights is even capable of automatically drawing a diagram with the dependencies between services based on their communication.
 
 Let's look at what Dapr can offer when it comes to observability.
 
@@ -104,7 +104,7 @@ The Dapr runtime logging is automatically ...
 
 #### End-to-end tracing with Zipkin
 
-[Zipkin](https://zipkin.io/) is an open-source distributed tracing system. It can ingest and visualize OpenTelemetry data. Dapr offers support for Zipkin out of the box. This example demonstrates how to configure Zipkin to visualize Dapr telemetry.
+[Zipkin](https://zipkin.io/) is an open-source distributed tracing system. It can ingest and visualize telemetry data. Dapr offers support for Zipkin out of the box. This example demonstrates how to configure Zipkin to visualize Dapr telemetry.
 
 ##### Enable and configure tracing
 
