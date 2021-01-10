@@ -1,51 +1,269 @@
 title: Dapr Observability
 description: A description of the observability features of Dapr and how to apply them
 author: edwinvw
-ms.date: 01/09/2020
+ms.date: 01/10/2020
 
 # Dapr observability
 
-When building a distributed system (say a microservices based solution), it is extremely important to have a good idea of what's going on with the services while they run in production. We often refer to this as **observability**. Having observability, assures insight into the health of the application at all times. This is invaluable for effectively monitoring and troubleshooting the application. 
+When building a distributed system (say a microservices based solution), it is crucial to have a good idea of what's going on with the services while running in production. We often refer to this as **observability**. Having observability assures insight into the health of the application at all times. This is invaluable for effectively monitoring and troubleshooting the application. 
 
-The information used to gain observability can roughly be divided into the following four categories: 
+The information used to gain observability is often referred to as **telemetry** and can roughly be divided into the following four categories: 
 
-1. The **health** of the services. This gives insight into whether all services are up & running and accepting requests?
-1. **End-to-end tracing** of the communication between the services. Which messages are exchanged between the services and which services are involved in executing some business scenario? This information includes request/response and message-based communication.  
-1. The **Logging** from the services. Which code is being executed and did any errors occur?
-1. Several **metrics**: how is the performance of a service and how many resources does it consume?
+1. The **Logging** from the services. Logging gives insight into how the code is being executed at runtime and whether any errors have occurred.
+1. Several **metrics**. Metrics give insight into the performance of a service and its resource consumption.
+1. **End-to-end tracing**. Tracing gives insight into the traffic between the services and which services are involved in distributed transactions to execute some business scenario.
+1. The **health status** of the services. Health status gives insight into the availability of the services.
 
-Whether or not the information in all categories is available, depends on the observability features offered by the platform your application runs on. An example of a platform that offers all the categories is Microsoft Azure for instance. Azure offers a service called **Application Insights**. This service is automatically configured for most of the available Azure services. When an application is built using these services and it is deployed and running in Azure, several components gather information from the services and automatically sent this to App Insights. This includes logging from the application code, exceptions that occurred in the code, metrics about the resource utilization of the services, duration and status-code of all requests sent to service and lots more. App Insights is even capable of automatically drawing a diagram with the dependencies between services based on their communication.   
+Whether or not all categories of telemetry are available depends on the observability features offered by the platform your application runs on. An example of a platform that offers all the categories is Microsoft Azure, for instance. Azure offers a service called **Application Insights**. This service is automatically enabled for most of the available Azure IaaS and PaaS services. When an application is built using these Azure services, telemetry is gathered automatically and sent to App Insights. This includes logging from the application code, exceptions that occurred in the code, metrics on the resource utilization of the services, duration and status-code of all requests sent to service and more. App Insights is even capable of automatically drawing a diagram with the dependencies between services based on their communication.
+
+Let's look at what Dapr can offer when it comes to observability.
 
 ## What it solves
 
-The former section introduced Azure Application Insights as a tool for offering observability out of the box for several Azure services. This is some pretty awesome tech! But what to do when the application is not comprised of standard Azure services? Is it still possible to leverage something like App Insights for such an application? Well, there are several libraries available from Microsoft to integrate an application with App Insights. The way the application emits logging information probably has to be changed. And during the startup of the application, some initialization code for App Insights has to be executed This is all great! But, a drawback of this approach is that the application is now tightly coupled to Application Insights (through its libraries) and contains App Insights specific code. This is what Dapr can solve.
+The former section introduced Azure Application Insights as a tool for offering observability out of the box for several Azure services. This is some pretty awesome tech! But what to do when you cannot leverage the Azure services to build your application? Is it still possible to leverage something like App Insights for such an application? 
 
-Dapr also offers several observability features out of the box. As stated in [Chapter X: TODO: link to chapter that describes sidecar pattern](#), Dapr uses a sidecar architecture pattern. The Dapr sidecars are able to collect logging from the services and intercept all communication between them. This information is published by the sidecar using protocols that are based on open-standards like **OpenTelemetry** (this will be explained in more detail later in this chapter). Because of this design, Dapr is able to integrate with several different monitoring backends, including Application Insights. And the cool thing is: the application code does not need to know anything about observability - it's all handled by Dapr. 
+There are several libraries available from Microsoft to integrate an application with App Insights. You need to add a reference to these libraries and use them to emit logging information. During the startup of the application, it needs to initialize App Insights. This requires some initialization code. Although this provides observability, a drawback of this approach is that the application is now tightly coupled to Application Insights through its libraries and App Insights specific code. Changing to a different monitoring backend later would be a lot of work. Wouldn't it be great if this coupling could be prevented and observability would be handled by something outside of the code!? Dapr can make that happen.
+
+Dapr offers many observability features out of the box. It automatically captures all traffic between the services in a distributed application. This only includes traffic generated by using one of the Dapr building blocks. Dapr can correlate requests and responses that are part of a flow based on context information it injects into the traffic logs automatically. By doing this, it is capable of delivering end-to-end tracing for distributed operations that include multiple services. Finally, Dapr provides endpoints for querying health status and metrics on performance and resource utilization. Dapr makes all this telemetry available in open-standards based formats. This enables you to feed this information into the monitoring backend of your choice. There, the information can be visualized, queried and analyzed. 
+
+Because Dapr does all the heavy lifting here, the application is unaware of how observability is implemented. There is no need for referencing any libraries or implementing custom code instrumentation. This allows the developer to focus on building business logic instead of on observability. Another benefit is that all services will be consistent in how they provide observability. Observability is configured on the Dapr level and is consistent across services. And this is very convenient when services are created by different teams and potentially even written in different programming languages. 
+
+Let's dive in and see how observability works in Dapr!
 
 ## How it works
 
-**TODO**
+The fact that Dapr uses a sidecar architecture (as explained in [Chapter 2](dapr-at-20000-feet.md)), enables a lot of the observability features. Because services communicate using the Dapr sidecars, the sidecars can intercept all communication between the services. Together with logging and metrics, the sidecars can provide all the necessary telemetry to monitor your application. 
+
+Dapr offers the ability to configure certain **collectors** that will collect the telemetry and publish it using formats and protocols that are based on open standards. Because of this design, Dapr can integrate with several different monitoring backends, including Application Insights. In Figure 9-1, you see an overview of the Dapr observability architecture:
+
+![Overview of the Dapr observability architecture](media/observability/observability-architecture.png)
+
+**Figure 9-1**: Overview of the Dapr observability architecture
+
+Observability in Dapr is a bit different from the other building blocks like pub/sub or state management. There is no specific observability building block you need to configure. Instead, you need to configure a collector that will ingest all the telemetry emitted by the Dapr runtime and publish it to the monitoring backend of your choice. As you can see in Figure 9-1, It is also possible to configure multiple collectors to integrate with different monitoring backends. 
+
+As stated in the introduction, we can identify four different categories of telemetry. The following sections will provide more details on each of these categories. It will include instructions on how to configure the collector(s) to integrate with some of the most popular monitoring backends out there. 
+
+Because observability is particularly invaluable when running in production, all examples will focus on production scenarios and assume that the example application is running in Kubernetes and Dapr is installed on this cluster (see [Chapter 2- Getting started](ch3-getting-started.md) for instructions). 
+
+### Logging [WIP]
+
+Logging gives insight into what is happening with a service at runtime. When running the application with Dapr, you can identify two types of logging:
+
+-  Logging emitted by the application code.
+- Logging emitted by the Dapr runtime.
+
+The Dapr runtime logging is automatically ...
+
+ Dapr publishes log entries using the following structure:
+
+| Field    | Description                                         | Example                            |
+| -------- | --------------------------------------------------- | ---------------------------------- |
+| time     | ISO8601 formatted timestamp                         | `2021-01-10T14:19:31.000Z`         |
+| level    | Level of the entry (info \| warn \| debug \| error) | `info`                             |
+| type     | Log Type                                            | `log`                              |
+| msg      | Log Message                                         | `application configuration loaded` |
+| scope    | Logging Scope                                       | `dapr.runtime`                     |
+| instance | Container Name                                      | eshop/basket.api:linux-latest      |
+| app_id   | Dapr App ID                                         | eshop-basket-api                   |
+| ver      | Dapr Runtime Version                                | `1.0.0`-rc.2                       |
+
+>  **TODO**
+>
+>  - Plain Text vs. JSON (structured) logs
+>  - Log collectors
+>  - FluentD + ELK sample
+
+### Metrics
+
+> **TODO**
+>
+> - Prometheus Scraping
+> - [Metrics list](https://github.com/dapr/dapr/blob/master/docs/development/dapr-metrics.md)
+> - Grafana sample
+
+#### Configuration
+
+### Health
+
+> **TODO**
+>
+> - /healtz endpoint
+> - Sample request / response
+> - Health / Readiness probe in Kubernetes
+
+### End-to-end tracing
+
+> **TODO**
+>
+> - OpenTelemetry
+> - Spans and traces
+> - W3C Trace Context
+> - Configuration
+>   - Zipkin sample
+>   - AI with OTEL connector sample
+>   - AKS with Prometheus 
+
+#### Using Zipkin to view telemetry
+
+[Zipkin](https://zipkin.io/) is an open-source distributed tracing system. It can ingest and visualize OpenTelemetry data. Dapr offers support for Zipkin out of the box. This example demonstrates how to configure Zipkin to visualize Dapr telemetry.
+
+##### Enable and configure tracing
+
+First, tracing must be enabled for the Dapr runtime using a Dapr configuration file. Here's an example of a configuration file named `tracing-config.yaml`:  
+
+```yaml
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: tracing-config
+  namespace: default
+spec:
+  tracing:
+    samplingRate: "1"
+    zipkin:
+      endpointAddress: "http://zipkin.default.svc.cluster.local:9411/api/v2/spans"
+```
+
+The `samplingRate` specifies the interval used for publishing traces. This can be used to decrease the amount of traces Dapr publishes. The value must be between `0` (tracing disabled) and `1` (every trace is published). With a value of `0.5`, every other trace is published. The `endpointAddress` points to an endpoint on a Zipkin server running in the Kubernetes cluster. The default port for Zipkin is `9411`.
+
+> [!NOTE]
+> When installing Dapr in stand-alone mode, a Zipkin server is automatically installed and tracing is enabled in the default configuration file located in `$HOME/.dapr/config.yaml` or `%USERPROFILE%\.dapr\config.yaml` on Windows).
+
+The configuration must be applied to the Kubernetes cluster using the Kubernetes CLI:
+
+```bash
+kubectl apply -f tracing-config.yaml
+```
+
+##### Install the Zipkin server
+
+By default, no Zipkin server is installed when installing Dapr into a Kubernetes cluster. The following Kubernetes manifest file named `zipkin.yaml`, deploys a standard Zipkin server to the cluster:
+
+```yaml
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: zipkin
+  namespace: eshop
+  labels:
+    service: zipkin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: zipkin
+  template:
+    metadata:
+      labels:
+        service: zipkin
+    spec:
+      containers:
+        - name: zipkin
+          image: openzipkin/zipkin-slim
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9411
+              protocol: TCP
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: zipkin
+  namespace: eshop
+  labels:
+    service: zipkin
+spec:
+  type: NodePort
+  ports:
+    - port: 9411
+      targetPort: 9411
+      nodePort: 32411
+      protocol: TCP
+      name: zipkin
+  selector:
+    service: zipkin
+
+```
+
+The deployment uses the standard `openzipkin/zipkin-slim` container image. The Zipkin service exposes the Zipkin website you can use to view the telemetry on port `32411`. Use the Kubernetes CLI to apply the manifest file to the Kubernetes cluster and deploy the Zipkin server:
+
+```bash
+kubectl apply -f zipkin.yaml
+```
+
+##### Configure the services to use the tracing configuration
+
+Now everything is set up correctly to start publishing telemetry. Every Dapr sidecar that is deployed as part of the application must be instructed to start emitting telemetry when started. To do that, add a `dapr.io/config` annotation that references the `tracing-config` configuration to each service's deployment. Here's an example of the eShop Ordering API service's manifest file containing the annotation:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ordering-api
+  namespace: eshop
+  labels:
+    app: eshop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eshop
+  template:
+    metadata:
+      labels:
+        app: simulation
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "simulation"
+        dapr.io/config: "tracing-config"
+    spec:
+      containers:
+      - name: simulation
+        image: eshop/ordering.api:linux-latest
+```
+
+##### Inspect the telemetry in Zipkin
+
+Once the application is started, the Dapr sidecars will start emitting telemetry to the Zipkin server. To inspect this telemetry, point a web-browser to [http://localhost:32411](http://localhost:32411). You will see the Zipkin webpage, as shown in Figure 9-2:
+
+![The Zipkin start page](media/observability/zipkin.png)
+
+ **Figure 9-1**: The Zipkin start page
+
+On the *Find a trace* page, you can query traces. Pressing the *RUN QUERY* button without specifying any restrictions will show all the ingested *traces*, as shown in Figure 9-3:
+
+![A list of traces](media/observability/zipkin-traces-overview.png)
+
+**Figure 9-3**: A list of traces
+
+Clicking the *SHOW* button next to a specific trace, will show the details of that trace, as shown in Figure 9-4:
+
+![The details of a trace](media/observability/zipkin-trace-details.png)
+
+**Figure 9-4**: The details of a trace
+
+Each item on the details page, represents a span that is part of the selected trace. 
+
+##### Inspect the dependencies between services
+
+Because Dapr sidecars handle all traffic between the services, Zipkin can use the trace information to determine the dependencies between the services. To see this in action, go to the `Dependencies` tab on the Zipkin web page and click the button with the magnifying glass. Zipkin will show an overview of all the services and their dependencies, as seen in Figure 9-5:
+
+![A dependency graph in Zipkin](media/observability/zipkin-dependencies.png)
+
+**Figure 9-5**: A dependency graph in Zipkin
+
+The animated dots on the lines between the services represent requests and move from source to destination. Red dots indicate a failed request.
 
 ## Using the Dapr .NET SDK
 
-**TODO**
-
-## Observability components
-
-**TODO**
-
-### Configuration (TODO Move generic text to getting started)
-
-**TODO**
-
 ## Reference architecture: eShopOnDapr
-
-**TODO**
 
 ## Summary
 
-**TODO**
-
 ## References
 
-**TODO**
+#### 
