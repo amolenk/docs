@@ -82,8 +82,6 @@ The Dapr runtime logging is automatically ...
 > - [Metrics list](https://github.com/dapr/dapr/blob/master/docs/development/dapr-metrics.md)
 > - Grafana sample
 
-#### Configuration
-
 ### Health
 
 > **TODO**
@@ -104,7 +102,7 @@ The Dapr runtime logging is automatically ...
 >   - AI with OTEL connector sample
 >   - AKS with Prometheus 
 
-#### Using Zipkin to view telemetry
+#### End-to-end tracing with Zipkin
 
 [Zipkin](https://zipkin.io/) is an open-source distributed tracing system. It can ingest and visualize OpenTelemetry data. Dapr offers support for Zipkin out of the box. This example demonstrates how to configure Zipkin to visualize Dapr telemetry.
 
@@ -265,5 +263,3 @@ The animated dots on the lines between the services represent requests and move 
 ## Summary
 
 ## References
-
-#### 
