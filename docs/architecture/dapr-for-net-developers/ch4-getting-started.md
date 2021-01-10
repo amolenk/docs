@@ -2,52 +2,51 @@
 title: Getting started with Dapr
 description: This chapter will guide you through preparing your local development environment and building two .NET applications with Dapr.
 author: amolenk 
-ms.date: 12/16/2020
+ms.date: 01/09/2020
 ---
 
 # Getting started with Dapr
 
-In the first two chapters, you learned the basic concepts of Dapr. It's time now to get some hands-on experience. This chapter will guide you through preparing your local development environment for Dapr and building two .NET applications with it.
+In the first two chapters, you learned basic concepts about Dapr. It's time to take it for a *test drive*. This chapter will guide you through preparing your local development environment and building two Dapr .NET applications.
 
 ## Installing Dapr into your local environment
 
-In this section we'll explain how to install Dapr into your local development environment. With Dapr installed locally, you can build and run Dapr applications in [self-hosted mode](https://docs.dapr.io/operations/hosting/self-hosted/self-hosted-overview/).
+You'll start by installing Dapr on your development computer. Once complete, you can build and run Dapr applications in [self-hosted mode](https://docs.dapr.io/operations/hosting/self-hosted/self-hosted-overview/).
 
-Follow these steps to install Dapr locally:
-
-1. [Install the Dapr CLI](https://docs.dapr.io/getting-started/install-dapr-cli/). The Dapr CLI allows you to setup Dapr on your local environment or on a Kubernetes cluster. It also provides debugging support, and launches and manages Dapr instances.
+1. [Install the Dapr CLI](https://docs.dapr.io/getting-started/install-dapr-cli/). It enables you to launch, run, and manage Dapr instance. It also provides debugging support.
 
 2. Install [Docker Desktop](https://docs.docker.com/get-docker/). If you're running on Windows, make sure that **Docker Desktop for Windows** is [configured to use Linux containers](https://docs.docker.com/docker-for-windows/#switch-between-windows-and-linux-containers).
 
-  > By default, Dapr uses Docker containers to give you the best out-of-the-box experience. If you want to install Dapr locally without requiring Docker, you can skip these steps and [execute a *slim* initialization](https://docs.dapr.io/operations/hosting/self-hosted/self-hosted-no-docker/) instead. Note that the examples in this chapter require that you use Docker containers.
+  > [!NOTE]
+  > By default, Dapr uses Docker containers to provide you the best out-of-the-box experience. To run Dapr outside of Docker, you can skip this step and [execute a *slim* initialization](https://docs.dapr.io/operations/hosting/self-hosted/self-hosted-no-docker/). The examples in this chapter require you use Docker containers.
 
-3. [Initialize Dapr using the CLI](https://docs.dapr.io/getting-started/install-dapr/).
+3. [Initialize Dapr](https://docs.dapr.io/getting-started/install-dapr/). This step sets up your development environment by installing the latest Dapr binaries and container images.
 
- > This step installs the latest Dapr Docker containers and setups a developer environment to help you get started with Dapr.
+4. Install the [.NET Core 3 Development Tools](https://dotnet.microsoft.com/download/dotnet-core/3.1) for .NET Core 3.1.
 
-Now that Dapr is installed in your local environment, let's build your first Dapr application!
+Now that Dapr is installed, it's time to build your first Dapr application!
 
 ## Building your first Dapr application
 
-In this walkthrough, you'll build a simple .NET Console application that uses the Dapr State Management building block.
-
-To complete this walkthrough, you'll also need to install the [.NET Core 3 Development Tools](https://dotnet.microsoft.com/download/dotnet-core/3.1) for development with .NET Core 3.1.
+You'll start by building a simple .NET Console application that consumes the [Dapr State Management](../ch5-state-management.md) building block.
 
 ### Create the application
 
-1. In your terminal, navigate to a root folder where you want to build your application. Once there, enter the following command to create a new .NET Console application:
+1. Open up the command shell or terminal of your choice. You might consider the terminal in [Visual Studio Code](https://code.visualstudio.com/). Navigate to the root folder in which you want to build your application. Once there, enter the following command to create a new .NET Console application:
 
    ```terminal
    ~$ dotnet new console -o DaprCounter
    ```
 
-2. Then, navigate to the new directory created by the previous command:
+   The command scaffolds a simple "Hello World" .NET Core application.  
+
+2. Then, navigate into the new directory created by the previous command:
 
    ```terminal
    ~$ cd DaprCounter
    ```
 
-3. The template created a simple "Hello World" application. The application displays "Hello World!" when you run it using the the `dotnet run` command:
+3. Run the newly created application using the the `dotnet run` command. Doing so writes "Hello World!" to the console screen:
 
    ```terminal
    ~$ dotnet run
@@ -56,11 +55,11 @@ To complete this walkthrough, you'll also need to install the [.NET Core 3 Devel
 
 ### Add Dapr State Management
 
-Next, you'll use the Dapr State Management building block to implement a stateful counter in the program.
+Next, you'll use the Dapr [State Management building block](https://docs.dapr.io/developing-applications/building-blocks/state-management/state-management-overview/) to implement a stateful counter in the program.
 
-While you can call Dapr APIs with the native Dapr HTTP and gRPC SDKs, it's much more intuitive to use the Dapr .NET SDK. The Dapr .NET SDK feels more natural for a .NET developer because it provides a strongly-typed .NET client to call the Dapr APIs. It also integrates with ASP.NET Core, making it even easier to use Dapr features such as pub/sub messaging and state management from ASP.NET Core applications.
+You can invoke Dapr APIs across any platform with its native HTTP and gRPC SDKs. However, .NET Developers will find the Dapr .NET SDK more natural and intuitive. It provides a strongly typed .NET client to call the Dapr APIs. The .NET SDK tightly integrates with ASP.NET Core integrating Dapr features such as pub/sub messaging and state management.
 
-1. From your terminal, add the `Dapr.Client` NuGet package to your application:
+1. From the terminal window, add the `Dapr.Client` NuGet package to your application:
 
    ```
    ~$ dotnet add package Dapr.Client
@@ -68,7 +67,7 @@ While you can call Dapr APIs with the native Dapr HTTP and gRPC SDKs, it's much 
 
    > If you're working with a pre-release version of Dapr, be sure to add the `--prerelease` flag to the command.
 
-2. Open the `Program.cs` file in your favorite editor and change its contents to:
+2. Open the `Program.cs` file in your favorite editor and update its contents to the following code:
 
    ```c#
    using System;
@@ -101,25 +100,28 @@ While you can call Dapr APIs with the native Dapr HTTP and gRPC SDKs, it's much 
 
    The updated code performs the following steps:
 
-   - First a new `DaprClient` instance is instantiated. This class is used for most interactions with Dapr sidecars.
+   - First a new `DaprClient` instance is instantiated. This class enables you to interact with most Dapr sidecars.
    - From the state store, `DaprClient.GetStateAsync` fetches the value for the `counter` key. If the key does exist, the default `int` value (which is `0`) is returned.
-   - Then the code iterates, writing the `counter` value to the console and saving an incremented value to the state store.
+   - The code then iterates, writing the `counter` value to the console and saving an incremented value to the state store.
 
-3. To run the application, you must use the Dapr CLI `run` command. It invokes the underlying Dapr runtime, enabling the application and Dapr sidecar to run together. You'll also need to name your application by specifying an application id. If you don't specify an application id, Dapr will generate a unique value for you. This will cause problems with the State Management building block because it uses the application id as a prefix for the state keys. This means that if your application id changes, you will no longer be able to access any previously stored state.
+3. The Dapr CLI `run` command starts the application. It invokes the underlying Dapr runtime and enables the application and Dapr sidecar to run together. If you omit the `app-id`, Dapr will then generate a unique name for the application. 
 
-   Now run the application:
+ > [!IMPORTANT]
+ > Care must be taken to always pass an explicit `app-id` parameter when consuming the State Management building block. The block uses the application Id value as a *prefix* for its state key for each key-value pair. If the application id changes, you can no longer access the previous stored state. 
+
+   Run the application with the following command:
 
    ```
    ~$ dapr run --app-id DaprCounter dotnet run
    ```
 
-   Try stopping and restarting the application. You'll see that the counter does not reset. Instead it continues from the previously saved state, making this a truly stateful application.
+   Try stopping and restarting the application. You'll see that the counter doesn't reset. Instead it continues from the previously saved state. The Dapr building block makes the application stateful.
 
-At this point, you might wonder where the state is actually stored. For that we'll have to look at component configuration files, which we will address in the next section.
+You might wonder, where is the state stored? 
 
 ## Component configuration files
 
-In the previous section, you've created a stateful application which uses the default state store component installed by Dapr. When you initialized Dapr with the the `dapr init` command, the Dapr CLI automatically provisioned a Redis container. It also created a default component configuration file, entitled `statestore.yaml`. This file contains configuration settings for using the Redis cache as a state store. The file is stored in the `$HOME/.dapr/components` folder on Linux/macOS, and in the `%USERPROFILE%\.dapr\components` folder on Windows. Here's a look at its contents:
+When you first initialized Dapr (`dapr init`) for your local environment, it automatically provisioned a Redis container. To expose the Redis container as the default state store component, Dapr also created a component configuration file, entitled `statestore.yaml`. Here's a look at its contents:
 
 ```yaml
 apiVersion: dapr.io/v1alpha1
@@ -137,15 +139,15 @@ spec:
     value: "true"
 ```
 
+ > [!NOTE]
+ > Default component configuration files are stored in the `$HOME/.dapr/components` folder on Linux/macOS, and in the `%USERPROFILE%\.dapr\components` folder on Windows.
 
- . Start here
+Note the format of the previous component configuration file:
 
+- Each component has a name. In the sample above, the component is named `statestore`. We used that name in our first code example to tell the Dapr sidecar which component to use. 
+- Each component configuration file has a `spec` section. It contains a `type` field that specifies the component type. The `metadata` field contains information that the component requires, such as connection details and other settings. The exact metadata values you need to specify vary per component.
 
-
-
-Each component has a name. In the sample above, the component is named `statestore`. Note that we used that name in our walkthrough code to tell the Dapr sidecar which component to use. Each component configuration file has a `spec` section which contains a `type` field to specify the type of component and a `metadata` field. This holds metadata that the component requires, such as connection details and other settings. The exact metadata values you need to specify vary per component.
-
-By default, any Dapr sidecar can use a component that you've configured. In some scenarios however, you may want to limit this access. For example, let's say that the Redis component shown above should only be accessible to sidecars running in a production environment. The first step to achieve this is to define a *namespace* for the production environment, let's call it `production`. In self-hosted mode, you must specify the namespace of a Dapr sidecar by setting the `NAMESPACE` environment variable. If the `NAMESPACE` environment variable is set, the Dapr sidecar will only load the components that match the namespace. For Kubernetes deployments, the Kubernetes namespace determines which components are loaded. The following sample shows the Redis component placed in a `production` namespace:
+By default, any Dapr sidecar can consume any component you've configured. In some scenarios, however, you may have an architectural justification to limit the access of a particular Dapr component. For example, you may want to restrict the accessibility of the previously shown Redis component to sidecars only running in a production environment. To do so, you can define a `namespace` for the production environment. Maybe you name it `production`. In self-hosted mode, you specify the namespace of a Dapr sidecar by setting the `NAMESPACE` environment variable. When configured, the Dapr sidecar will only load the components that match the namespace. For Kubernetes deployments, the Kubernetes namespace determines the components that are loaded. The following sample shows the Redis component placed in a `production` namespace. Note the `namespace` declaration in the `metadata` element:
 
 ```yaml
 apiVersion: dapr.io/v1alpha1
@@ -164,7 +166,7 @@ spec:
     value: "true"
 ```
 
-We can take this one step further. Within the `production` namespace, you may want to limit access to the Redis cache to only the `DaprCounter` application. You can do so by specifying *scopes* in the component configuration. The following example shows how to further restrict access to the Redis `statestore` component to application `DaprCounter` in the `production` namespace:
+If needed, you can restrict component usage further to a particular application. Within the `production` namespace, you may want to limit access of the Redis cache to only the `DaprCounter` application. You do so by specifying `scopes` in the component configuration. The following example shows how to restrict access to the Redis `statestore` component to the application `DaprCounter` in the `production` namespace:
 
 ```yaml
 apiVersion: dapr.io/v1alpha1
@@ -187,7 +189,7 @@ spec:
 
 ## Building a multi-container Dapr application
 
-In the first walkthrough, we explained how you can create a simple application consisting of a single executable running side by side with a Dapr sidecar. Distributed applications such as eShopOnDapr consist of many more parts. eShopOnDapr has a number of .NET Core services running in containers along with containers for infrastructure such as Redis, SQL Server, Seq, and Zipkin. Managing multiple containers requires container orchestration and requires an orchestrator such as Docker Compose or Kubernetes. To make debugging and testing locally very easy, we use Docker Compose in eShopOnDapr.
+In the first walkthrough, we explained how you can create a simple application consisting of a single executable running side by side with a Dapr sidecar. Distributed applications such as eShopOnDapr consist of many more parts. eShopOnDapr has many .NET Core services running in containers along with containers for infrastructure such as Redis, SQL Server, Seq, and Zipkin. Managing multiple containers requires container orchestration and requires an orchestrator such as Docker Compose or Kubernetes. To make debugging and testing locally easy, we use Docker Compose in eShopOnDapr.
 
 In the following walkthrough, you'll create a multi-container application from scratch and use Dapr Service Invocation to communicate between the services. The solution will consist of a front-end web application that retrieves weather forecasts from a back-end web API. The front-end and back-end will each run in a Docker container. To complete this walkthrough, you'll need to have installed Dapr into your local environment along with the following prerequisites:
 
@@ -208,7 +210,7 @@ In the following walkthrough, you'll create a multi-container application from s
 
    ![Screenshot of creating a new ASP.NET Core web application](./media/ch4-getting-started/walkthrough-multicontainer-createwebapp.png)
 
-4. Add a second ASP.NET Core Web Application project to the same solution and call it *DaprBackEnd*. Select **API** as the project type, and clear the checkbox for **Configure for HTTPS**. It's recommended to deploy Dapr sidecars in the same network namespace as the application. Therefore, the Dapr sidecar is designed to use unencrypted HTTP to communicate with the application. Note that we still use HTTPS for the front-end and that Dapr provides support for mTLS to encrypt calls between services.
+4. Add a second ASP.NET Core Web Application project to the same solution and call it *DaprBackEnd*. Select **API** as the project type, and clear the checkbox for **Configure for HTTPS**. It's recommended to deploy Dapr sidecars in the same network namespace as the application. Therefore, the Dapr sidecar is designed to use unencrypted HTTP to communicate with the application. Note that we still use HTTPS for the front end and that Dapr provides support for mTLS to encrypt calls between services.
 
    ![Screenshot of creating the back-end web API](./media/ch4-getting-started/walkthrough-multicontainer-createwebapi.png)
 
