@@ -36,7 +36,7 @@ The fact that Dapr uses a sidecar architecture (as explained in [Chapter 2](dapr
 
 Dapr offers the ability to configure certain **collectors** that will collect the telemetry and publish it using formats and protocols that are based on open standards. Because of this design, Dapr can integrate with several different monitoring backends, including Application Insights. In Figure 9-1, you see an overview of the Dapr observability architecture:
 
-![](media/observability/observability-architecture.png)
+![Overview of the Dapr observability architecture](media/observability/observability-architecture.png)
 
 **Figure 9-1**: Overview of the Dapr observability architecture
 
