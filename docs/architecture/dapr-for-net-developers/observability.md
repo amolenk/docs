@@ -36,11 +36,15 @@ The fact that Dapr uses a sidecar architecture (as explained in [Chapter 2](dapr
 
 Dapr offers the ability to configure certain **collectors** that will collect the telemetry and publish it using formats and protocols that are based on open standards. Because of this design, Dapr can integrate with several different monitoring backends, including Application Insights. In Figure 9-1, you see an overview of the Dapr observability architecture:
 
-![Overview of the Dapr observability architecture](media/observability/observability-architecture.png)
+![](media/observability/observability-architecture.png)
 
 **Figure 9-1**: Overview of the Dapr observability architecture
 
-Observability in Dapr is a bit different from the other building blocks like pub/sub or state management. There is no specific observability building block you need to configure. Instead, you need to configure a collector that will ingest all the telemetry emitted by the Dapr runtime and publish it to the monitoring backend of your choice. As you can see in Figure 9-1, It is also possible to configure multiple collectors to integrate with different monitoring backends. 
+1. Service A calls an operation on Service B. This call is routed through the Dapr sidecars to Service B.
+1. The response is sent back to Service A through the Dapr sidecars.
+1. The sidecars gather all available telemetry for every request and response and publish this to the configured collector(s).  
+
+Observability in Dapr is a bit different from the other building blocks like pub/sub or state management. There is no specific observability building block that you need to configure. Instead, you need to configure a collector that will ingest all the telemetry emitted by the Dapr runtime and publish it to the monitoring backend of your choice. As you can see in Figure 9-1, It is also possible to configure multiple collectors to integrate with different monitoring backends. 
 
 As stated in the introduction, we can identify four different categories of telemetry. The following sections will provide more details on each of these categories. It will include instructions on how to configure the collector(s) to integrate with some of the most popular monitoring backends out there. 
 
