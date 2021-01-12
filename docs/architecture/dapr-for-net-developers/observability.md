@@ -89,9 +89,9 @@ By default, Dapr emits logging in plain-text format. Here's an example of some l
 Every log entry is formatted as a string containing key/value pairs. This is called *unstructured* logging because it hard to parse by a tool. If you are planning to put the logging into a monitoring tool so you can search through it, it is recommended to use *structured* logging. With structured logging, each log entry is formatted as a JSON object. This format can be parsed by a tool and all the individual fields of the entry can be queried. Here is an example of the same logging in structured format:
 
 ```json
-{"app_id"="ordering-api", "instance"="TSTSRV03", "level"="info", "msg"="starting Dapr Runtime -- version 1.0.0-rc.2 -- commit 196483d", "scope"="dapr.runtime", "time"="2021-01-12T16:11:39.4669323+01:00", "type"="log", "ver"="1.0.0-rc.2"}
-{"app_id"="ordering-api", "instance"="TSTSRV03", "level"="info", "msg"="log level set to: info", "scope"="dapr.runtime", "type"="log", "time"="2021-01-12T16:11:39.467933+01:00", "ver"="1.0.0-rc.2"}
-{"app_id"="ordering-api", "instance"="TSTSRV03", "level"="info", "msg"="metrics server started on :62408/", "scope"="dapr.metrics", "type"="log", "time"="2021-01-12T16:11:39.467933+01:00", "ver"="1.0.0-rc.2"}
+{"app_id": "ordering-api", "instance": "TSTSRV03", "level": "info", "msg": "starting Dapr Runtime -- version 1.0.0-rc.2 -- commit 196483d", "scope": "dapr.runtime", "time": "2021-01-12T16:11:39.4669323+01:00", "type": "log", "ver": "1.0.0-rc.2"}
+{"app_id": "ordering-api", "instance": "TSTSRV03", "level": "info", "msg": "log level set to: info", "scope": "dapr.runtime", "type": "log", "time": "2021-01-12T16:11:39.467933+01:00", "ver": "1.0.0-rc.2"}
+{"app_id": "ordering-api", "instance": "TSTSRV03", "level": "info", "msg": "metrics server started on :62408/", "scope": "dapr.metrics", "type": "log", "time": "2021-01-12T16:11:39.467933+01:00", "ver": "1.0.0-rc.2"}
 ```
 
 To enable structured logging, you need to configure Dapr to do so. 
