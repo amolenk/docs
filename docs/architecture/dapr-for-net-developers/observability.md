@@ -177,9 +177,9 @@ The W3C Trace Context, is a specification for how to inject context information 
 
 The trace context information is included in the telemetry emitted by Dapr. With this information, it is possible to easily correlate requests and responses that are part of a distributed transaction across multiple services.
 
-In OTEL terminology, a set of requests and response that below together is called a *trace*. A trace contains a *span* for every request and response. The scenario as described in the example, is shown in Figure 9-3:
+In end-to-end-tracing terminology, a set of requests and responses that below together is called a *trace*. A trace contains a *span* for every request / response pair. A schematic view of the scenario as described in the example is shown in Figure 9-3:
 
-![Traces and spans](media/observability/traces-and-spans.png)
+![](media/observability/traces-and-spans.png)
 
 **Figure 9-3**: Traces and spans
 
