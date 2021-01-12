@@ -1,7 +1,7 @@
 title: Dapr Observability
 description: A description of the observability features of Dapr and how to apply them
 author: edwinvw
-ms.date: 01/10/2020
+ms.date: 01/12/2020
 
 # Dapr observability
 
@@ -14,7 +14,7 @@ The information used to gain observability is often referred to as **telemetry**
 1. **End-to-end tracing**. Tracing gives insight into the traffic between the services and which services are involved in distributed transactions to execute some business scenario.
 1. The **health status** of the services. Health status gives insight into the availability of the services.
 
-Whether or not all telemetry categories are available depends on the observability features offered by the platform your application runs on. An example of a platform that offers all the categories is Microsoft Azure, for instance. Azure offers a service called **Application Insights**. This service is automatically enabled for most of the available Azure IaaS and PaaS services. When an application is built using these Azure services, telemetry is gathered automatically and sent to App Insights. This includes logging from the application code, exceptions that occurred in the code, metrics on the resource utilization of the services, duration and status-code of all requests sent to service and more. App Insights is even capable of automatically drawing a diagram with the dependencies between services based on their communication.
+Whether or not all telemetry categories are available depends on the observability features offered by the platform your application runs on. An example of a platform that offers all the categories is Microsoft Azure, for instance. Azure offers a service called **Application Insights** (or "App Insights"). This service is automatically enabled for most of the available Azure IaaS and PaaS services. When an application is built using these Azure services, telemetry is gathered automatically and sent to App Insights. This includes logging from the application code, exceptions that occurred in the code, metrics on the resource utilization of the services, duration and status-code of all requests sent to service and more. App Insights is even capable of automatically drawing a diagram with the dependencies between services based on their communication.
 
 Let's look at what Dapr can offer when it comes to observability.
 
@@ -57,24 +57,98 @@ Logging gives insight into what is happening with a service at runtime. When run
 -  Logging emitted by the application code.
 - Logging emitted by the Dapr runtime.
 
-The Dapr runtime logging is automatically ...
+With Dapr, all the logging from the Dapr runtime is available for publishing to a monitoring backend. 
 
- Dapr publishes log entries using the following structure:
+>  **TODO elaborate**
 
-| Field    | Description                                         | Example                            |
-| -------- | --------------------------------------------------- | ---------------------------------- |
-| time     | ISO8601 formatted timestamp                         | `2021-01-10T14:19:31.000Z`         |
-| level    | Level of the entry (info \| warn \| debug \| error) | `info`                             |
-| type     | Log Type                                            | `log`                              |
-| msg      | Log Message                                         | `application configuration loaded` |
-| scope    | Logging Scope                                       | `dapr.runtime`                     |
-| instance | Container Name                                      | eshop/basket.api:linux-latest      |
-| app_id   | Dapr App ID                                         | eshop-basket-api                   |
-| ver      | Dapr Runtime Version                                | `1.0.0`-rc.2                       |
+#### Log entry format
+
+ Dapr produces log entries using the following structure:
+
+| Field    | Description                                         | Example                             |
+| -------- | --------------------------------------------------- | ----------------------------------- |
+| time     | ISO8601 formatted timestamp                         | `2021-01-10T14:19:31.000Z`          |
+| level    | Level of the entry (info \| warn \| debug \| error) | `info`                              |
+| type     | Log Type                                            | `log`                               |
+| msg      | Log Message                                         | `metrics server started on :62408/` |
+| scope    | Logging Scope                                       | `dapr.runtime`                      |
+| instance | Hostname where Dapr runs                            | TSTSRV01                            |
+| app_id   | Dapr App ID                                         | ordering-api                        |
+| ver      | Dapr Runtime Version                                | `1.0.0`-rc.2                        |
+
+#### Unstructured vs. structured logging
+
+By default, Dapr emits logging in plain-text format. Here's an example of some logging:
+
+```
+== DAPR == time="2021-01-12T16:11:39.4669323+01:00" level=info msg="starting Dapr Runtime -- version 1.0.0-rc.2 -- commit 196483d" app_id=ordering-api instance=TSTSRV03 scope=dapr.runtime type=log ver=1.0.0-rc.2
+== DAPR == time="2021-01-12T16:11:39.467933+01:00" level=info msg="log level set to: info" app_id=ordering-api instance=TSTSRV03 scope=dapr.runtime type=log ver=1.0.0-rc.2
+== DAPR == time="2021-01-12T16:11:39.467933+01:00" level=info msg="metrics server started on :62408/" app_id=ordering-api instance=TSTSRV03 scope=dapr.metrics type=log ver=1.0.0-rc.2
+```
+
+Every log entry is formatted as a string containing key/value pairs. This is called *unstructured* logging because it hard to parse by a tool. If you are planning to put the logging into a monitoring tool so you can search through it, it is recommended to use *structured* logging. With structured logging, each log entry is formatted as a JSON object. This format can be parsed by a tool and all the individual fields of the entry can be queried. Here is an example of the same logging in structured format:
+
+```json
+{"app_id"="ordering-api", "instance"="TSTSRV03", "level"="info", "msg"="starting Dapr Runtime -- version 1.0.0-rc.2 -- commit 196483d", "scope"="dapr.runtime", "time"="2021-01-12T16:11:39.4669323+01:00", "type"="log", "ver"="1.0.0-rc.2"}
+{"app_id"="ordering-api", "instance"="TSTSRV03", "level"="info", "msg"="log level set to: info", "scope"="dapr.runtime", "type"="log", "time"="2021-01-12T16:11:39.467933+01:00", "ver"="1.0.0-rc.2"}
+{"app_id"="ordering-api", "instance"="TSTSRV03", "level"="info", "msg"="metrics server started on :62408/", "scope"="dapr.metrics", "type"="log", "time"="2021-01-12T16:11:39.467933+01:00", "ver"="1.0.0-rc.2"}
+```
+
+To enable structured logging, you need to configure Dapr to do so. 
+
+In standalone mode, you enable structured logging by specifying the flag `--log-as-json` on the command-line:
+
+```bash
+dapr run --app-id ordering-api --log-level info --log-as-json dotnet run
+```
+
+In Kubernetes, you enable structured logging by adding a `dapr.io/log-as-json` annotation to the deployment:
+
+```yaml
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: ordering
+  namespace: eshop
+  labels:
+    app: eshop
+    service: ordering
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: ordering
+  template:
+    metadata:
+      labels:
+        app: eshop
+        service: ordering
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "ordering-api"
+        dapr.io/app-port: "80"
+        dapr.io/config: "dapr-config"
+        dapr.io/log-as-json: "true"   # use structured logging
+    spec:
+      containers:
+        - name: ordering-api
+          image: eshop/ordering.api:linux-latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: ordering-cm
+```
+
+#### Collecting logs
+
+The logs emitted by Dapr can be fed into a monitoring backend for analysis. There are several ways of doing this. 
 
 >  **TODO**
 >
->  - Plain Text vs. JSON (structured) logs
 >  - Log collectors
 >  - FluentD + ELK sample
 
@@ -86,27 +160,32 @@ The Dapr runtime logging is automatically ...
 > - [Metrics list](https://github.com/dapr/dapr/blob/master/docs/development/dapr-metrics.md)
 > - Grafana sample
 
-### Health
+### End-to-end tracing [WIP]
 
-> **TODO**
->
-> - /healtz endpoint
-> - Sample request / response
-> - Health / Readiness probe in Kubernetes
+End-end-Tracing gives insight into the traffic that flows between the services in a distributed application. The log of all the requests and responses (or messages) exchanged between services is an invaluable source of information for troubleshooting issues. But still it is very hard to correlate traffic that is part of a distributed business transaction across multiple services. To make this easier, the [W3C Trace Context](https://www.w3.org/TR/trace-context/) standard was created.
 
-### End-to-end tracing
+The W3C Trace Context, is a specification for how to inject context information into requests and responses in order to correlate them. Dapr uses this standard to correlate requests that are part of the same flow. In Figure 9-1 you see an example of how this works:
 
-> **TODO**
->
-> - OpenTelemetry
-> - Spans and traces
-> - W3C Trace Context
-> - Configuration
->   - Zipkin sample
->   - AI with OTEL connector sample
->   - AKS with Prometheus 
+![W3C Trace Context example](media/observability/w3c-trace-context.png)
 
-#### End-to-end tracing with Zipkin
+**Figure 9-3**: W3C Trace Context example
+
+1. Service A invokes an operation on Service B. Because Service A initiates this call, Dapr creates a unique trace context and injects it into the request. 
+1. Service B receives the request and now invokes an operation on Service C. Dapr will detect that the incoming request contains a trace context and propagates this by injecting it into the outgoing request to Service C.  
+1. Service C receives the request and handles it. Dapr will detect that the incoming request contains a trace context and propagates this by injecting it into the outgoing response back to Service B.
+1. Service B receives the response and handles it. It creates a new response and propagates the trace context by injecting it into the outgoing response back to Service A.
+
+The trace context information is included in the telemetry emitted by Dapr. With this information, it is possible to easily correlate requests and responses that are part of a distributed transaction across multiple services.
+
+In OTEL terminology, a set of requests and response that below together is called a *trace*. A trace contains a *span* for every request and response. The scenario as described in the example, is shown in Figure 9-3:
+
+![Traces and spans](media/observability/traces-and-spans.png)
+
+**Figure 9-3**: Traces and spans
+
+The next sections are focused on how to publish end-to-end tracing telemetry by publishing it to a monitoring backend. 
+
+#### Zipkin
 
 [Zipkin](https://zipkin.io/) is an open-source distributed tracing system. It can ingest and visualize telemetry data. Dapr offers support for Zipkin out of the box. This example demonstrates how to configure Zipkin to visualize Dapr telemetry.
 
@@ -259,6 +338,58 @@ Because Dapr sidecars handle all traffic between the services, Zipkin can use th
 **Figure 9-5**: A dependency graph in Zipkin
 
 The animated dots on the lines between the services represent requests and move from source to destination. Red dots indicate a failed request.
+
+#### Jaeger & New Relic
+
+Besides Zipkin, here are other monitoring backends out there that can ingest telemetry in the Zipkin format. Examples are Jaeger and New Relic. To use them, you specify an `endpointAddress` pointing to either a Jaeger or New Relic server in the Dapr configuration file. Here is an example of a configuration file that configures Dapr to send telemetry to a Jaeger server. The URL for Jaeger API is identical to the URL for the Zipkin API. The only difference with the config file in the Zipkin example, is the port the server is running on:
+
+ ```yaml
+ apiVersion: dapr.io/v1alpha1
+ kind: Configuration
+ metadata:
+   name: tracing-config
+   namespace: default
+ spec:
+   tracing:
+     samplingRate: "1"
+     zipkin:
+       endpointAddress: "http://localhost:9415/api/v2/spans"
+ ```
+
+For New Relic you need to specify the endpoint of the New Relic API. Here's an example of a configuration file for New Relic:
+
+ ```yaml
+apiVersion: dapr.io/v1alpha1
+ kind: Configuration
+ metadata:
+   name: tracing-config
+   namespace: default
+ spec:
+   tracing:
+     samplingRate: "1"
+     zipkin:
+       endpointAddress: "https://trace-api.newrelic.com/trace/v1?Api-Key=<NR-API-KEY>&Data-Format=zipkin&Data-Format-Version=2"
+ ```
+
+Check out the [Jaeger](https://www.jaegertracing.io/) and [New Relic](https://newrelic.com/) websites for more information on how to use them.
+
+> **TODO**
+> - OpenTelemetry
+> - Configuration
+>   - AI with OTEL connector sample
+>   - AKS with Prometheus 
+
+#### Open Telemetry [WIP]
+
+[OpenTelemetry](https://opentelemetry.io/) (or "OTEL") is an open standard for working with telemetry. It contains APIs, SDKs and tools for producing and consuming telemetry. OTEL works with a component called a *collector* to collect telemetry from systems and publish it to a monitoring backend. The OTEL collector also supports the Zipkin trace format. 
+
+### Health
+
+> **TODO**
+>
+> - /healtz endpoint
+> - Sample request / response
+> - Health / Readiness probe in Kubernetes
 
 ## Using the Dapr .NET SDK
 
