@@ -70,13 +70,41 @@ The next figure shows an ordering service calling the `ship` method of an `Order
 2. The sidecar uses the locally cached partitioning information from the placement service to determine which actor service instance (partition) is responsible for hosting the actor with ID `3`. In this example, it's the service instance in pod 2. The call is forwarded to the appropriate sidecar.
 3. The sidecar instance in pod 2 calls the service instance to invoke the actor. The service instance is responsible for activating the actor and executing the actor method.
 
-### Timers and reminders
-
-
-
 ### Turn-based access model
 
 
+
+### Timers and reminders
+
+Actors can use timers and reminders to schedule calls to themselves. Both concepts support the configuration of a due time. The difference lies in the lifetime of the callback registrations. Timers will only stay active as long as the the actor is activated. Reminders outlive actor activations. If an actor is deactivated, a reminder will re-activate the actor. 
+
+Timers are registered by making a call to the actor API. In the following example, a timer is registered with a due time of 0 and a period of 10 seconds. 
+
+```bash
+curl -X POST http://localhost:3500/v1.0/actors/<actorType>/<actorId>/timers/<name> \
+  -H "Content-Type: application/json" \
+  -d '{
+        "dueTime": "0h0m0s0ms",
+        "period": "0h0m10s0ms"
+      }'
+```
+
+Because the due time is 0, the timer will fire immediately. After a timer callback has finished, the timer will wait 10 seconds before firing again.
+
+Reminders are registered in a similar way. The following example shows a reminder registration with a due time of 5 minutes, and an empty period: 
+
+```bash
+curl -X POST http://localhost:3500/v1.0/actors/<actorType>/<actorId>/reminders/<name> \
+  -H "Content-Type: application/json" \
+  -d '{
+        "dueTime": "0h5m0s0ms",
+        "period": ""
+      }'
+```
+
+This reminder will fire in 5 minutes. Because the given period is empty, this will be a one-time reminder.
+
+Timers and reminders both respect the turn-based access model. When a timer or reminder fires, the callback will not be executed until any other method invocation or timer/reminder callback has finished.
 
 ### State persistence
 
