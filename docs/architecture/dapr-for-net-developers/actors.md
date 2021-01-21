@@ -74,9 +74,45 @@ The next figure shows an ordering service calling the `ship` method of an `Order
 
 
 
+### Turn-based access model
+
+
+
 ### State persistence
 
+Actor state is persisted using the Dapr [state management building block](./ch5-state-management.md). Because actors can execute multiple state operations in a single turn, the state store component must support multi-item transactions. At the time of writing, the following state stores are supported:
 
+- Azure CosmosDB
+- MongoDB
+- PostgreSQL
+- Redis
+- SQL Server
+
+To configure a state store component for use with actors, you need to append the following metadata to the state store configuration:
+
+```yaml
+- name: actorStateStore
+  value: "true"
+```
+
+Here's a complete example for a Redis state store:
+
+```yaml
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: statestore
+spec:
+  type: state.redis
+  version: v1
+  metadata:
+  - name: redisHost
+    value: localhost:6379
+  - name: redisPassword
+    value: ""
+  - name: actorStateStore
+    value: "true"
+```
 
 ## Using .NET SDK
 
