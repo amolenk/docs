@@ -2,7 +2,7 @@
 title: The Dapr secrets management building block
 description: What exactly is the Dapr secrets management building block and how can I apply it to my applications
 author: edwinvw
-ms.date: 1/21/2020
+ms.date: 1/23/2020
 ---
 
 # The Dapr secrets management building block
@@ -33,7 +33,7 @@ The Dapr [Secrets Management building block](https://docs.dapr.io/developing-app
  - It supports various *pluggable* secret stores components, which can vary between development and production. 
  - Applications don't require direct dependencies on secret store libraries. 
  - Developers don't require detailed knowledge of each secret store.
- 
+
 Dapr handles all of the above concerns. 
 
 Access to the secrets is secured through authentication and authorization. Only an application with sufficient rights can access secrets. Applications running in Kubernetes can also use its built-in secrets management mechanism.
@@ -63,7 +63,7 @@ The URL contains the following segments:
  > [!NOTE]
  > The above URL represents the native Dapr API call available to any development platform that supports HTTP or gRPC. Popular platforms like .NET, Java, and Go have their own custom APIs.
 
-The JSON response contains the key and value of the secret.
+The JSON response contains the key and value of the secret. 
 
 Figure 10-1 shows how Dapr handles a request for the secrets management API:
 
@@ -89,6 +89,12 @@ GET http://localhost:3500/v1.0/secrets/secrets-store/interestRates?metadata.vers
 }
 ```
 
+The Dapr secrets API also offers an operation to retrieve all the secrets the application has access to:
+
+```http
+http://localhost:<daprPort>/v1.0/secrets/<secret-store-name>/bulk
+```
+
 ## Using the Dapr .NET SDK
 
 For .NET developers, the Dapr .NET SDK streamlines Dapr secret management. Consider the `DaprClient.GetSecretAsync` method. It enables you to retrieve a secret directly from any Dapr secret store with minimal effort. Here's an example of fetching a connection string secret for a SQL Server database:
@@ -107,9 +113,9 @@ Arguments for the `GetSecretAsync` method include:
 
 The method responds with a dictionary object as a secret can contain multiple key/value pairs. In the example above, the secret named `customerdb` is referenced from the collection to return a connection string.
 
-The Dapr .NET SDK also features a .NET configuration provider. It loads specified secrets into the underlying [.NET Core configuration API](https://docs.microsoft.com/aspnet/core/fundamentals/configuration/?view=aspnetcore-5.0). The running application can then reference secrets from the IConfiguration dictionary from the service container or using dependency injection. 
+The Dapr .NET SDK also features a .NET configuration provider. It loads specified secrets into the underlying [.NET Core configuration API](https://docs.microsoft.com/aspnet/core/fundamentals/configuration/?view=aspnetcore-5.0). The running application can then reference secrets from the `IConfiguration` dictionary that is registered in ASP.NET Core dependency injection. 
 
-The secrets configuration provider is available from the `Dapr.Extensions.Configuration` NuGet package. The provider can be registered in the `Program.cs` of an ASP.NET Web API application:  
+The secrets configuration provider is available from the [Dapr.Extensions.Configuration](https://www.nuget.org/packages/Dapr.Extensions.Configuration) NuGet package. The provider can be registered in the `Program.cs` of an ASP.NET Web API application:  
 
 ```csharp
 public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -129,7 +135,7 @@ public static IHostBuilder CreateHostBuilder(string[] args) =>
         });
 ```
 
-The above example loads the `eshopsecrets` secrets collection into the .NET configuration system at startup. Registering the provider requires an instance of `DaprClient` to invoke the secrets API from the Dapr sidecar. The other arguments include the name of the secrets management component and a DaprSecretDescriptor object with the name of the secret.
+The above example loads the `eshopsecrets` secrets collection into the .NET configuration system at startup. Registering the provider requires an instance of `DaprClient` to invoke the secrets API on the Dapr sidecar. The other arguments include the name of the secrets management component and a `DaprSecretDescriptor` object with the name of the secret.
 
 Once loaded, you can retrieve secrets directly from application code:
 
@@ -142,7 +148,7 @@ public void GetCustomer(IConfiguration config)
 
 ## Secrets management components
 
-The secrets management building block supports several Dapr secret store components. At the time of writing, the following secret stores are available:
+The secrets management building block supports several secret store components. At the time of writing, the following secret stores are available:
 
 - Environment Variables
 - Local file
@@ -198,7 +204,7 @@ spec:
 
 The above configuration file contains a **clear-text** password for connecting to the Redis server. **Hardcoded** passwords are always a bad idea. Pushing this configuration file to a public repository would expose the password. Storing the password in a secret store would dramatically improve this scenario. 
 
-The following examples demonstrate using several different secret stores.
+The following examples demonstrate this using several different secret stores.
 
 ### Local file
 
@@ -284,14 +290,14 @@ auth:
 
 The `secretKeyRef` element references the secret containing the password. It replaces the earlier *clear-text* value. The secret name and the key name, `eShopRedisPassword`, reference the secret. The name of the secret management component `eshop-local-secret-store` is found in the `auth` metadata element.
 
-You might wonder why `eShopRedisPassword` is identical for both the name and key in the secret reference? In the local file secret store, secrets aren't identified with a separate name. The scenario will be different in the next example using Kubernetes secrets.
+You might wonder why `eShopRedisPassword` is identical for both the name and key in the secret reference. In the local file secret store, secrets aren't identified with a separate name. The scenario will be different in the next example using Kubernetes secrets.
 
 ### Kubernetes secret
 
 This second example focuses on a Dapr application running in Kubernetes. It uses the standard secrets mechanism that Kubernetes offers. Use the Kubernetes CLI (`kubectl`) to create a secret named `eshop-redis-secret` that contains the password:
 
 ```bash
-kubectl create secret generic eshopsecrets --from-literal=redisPassword=e$h0p0nD@pr
+kubectl create secret generic eshopsecrets --from-literal=redisPassword=e$h0p0nD@pr -n eshop
 ```
 
 Once created, you can reference the secret in the component configuration file for state management:
@@ -334,13 +340,13 @@ For this example to work, the following prerequisites must be satisfied:
 - You've installed an X509 certificate for this service principal (containing both the public and private key) on the local filesystem.
 
  > [!NOTE]
- > A service principal is an identity that can be used by an application to authenticate an Azure service. The service principal uses an X509 certificate. The application uses this certificate as a credential to authenticate itself.
+ > A service principal is an identity that can be used by an application to authenticate an Azure service. The service principal uses a X509 certificate. The application uses this certificate as a credential to authenticate itself.
 
-The [Dapr Azure Key Vault secret store documentation](https://docs.dapr.io/operations/components/setup-secret-store/supported-secret-stores/azure-keyvault/) provides step-by-step instructions to create and configure a KeyVault environment.
+The [Dapr Azure Key Vault secret store documentation](https://docs.dapr.io/operations/components/setup-secret-store/supported-secret-stores/azure-keyvault/) provides step-by-step instructions to create and configure a Key Vault environment.
 
-#### Running KeyVault in stand-alone mode
+#### Using Key Vault when running in stand-alone mode
 
-Consuming Azure KeyVault in Dapr stand-alone mode requires the following configuration file:
+Consuming Azure Key Vault in Dapr stand-alone mode requires the following configuration file:
 
 ```yaml
 apiVersion: dapr.io/v1alpha1
@@ -374,14 +380,14 @@ The secrets management component type is `secretstores.azure.keyvault`. The `met
 
 Now the application can retrieve the Redis password from the Azure Key Vault.
 
-#### Running on Kubernetes
+#### Using Key Vault when running on Kubernetes
 
 Consuming Azure KeyVault with Dapr and Kubernetes also requires a service principal to authenticate against the Azure Key Vault. 
 
 First, create a *Kubernetes secret* that contains a certificate file using the kubectl CLI tool:
 
 ```bash
-kubectl create secret generic [k8s_spn_secret_name] --from-file=[pfx_certificate_file_local_path]
+kubectl create secret generic [k8s_spn_secret_name] --from-file=[pfx_certificate_file_local_path] -n eshop
 ```
 
 The command requires two command-line arguments:
