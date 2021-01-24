@@ -17,9 +17,9 @@ Secrets must be carefully managed so that they're never disclosed outside of the
 
 Not long ago, it was popular to store application secrets in a configuration file inside the application codebase. .NET Developers will fondly recall the web.config file. While simple to implement, integrating secrets to along with code was far from secure. A common misstep was to include the file when pushing to a public GIT repository, exposing the secrets to the world.
 
-A widely accepted methodology for constructing Modern distributed applications is the [Twelve-Factor Application](https://12factor.net/). It describes a set of principles and best practices. Its third factor prescribes that *configuration and secrets be externalized outside of the code base.* 
+A widely accepted methodology for constructing Modern distributed applications is the [Twelve-Factor Application](https://12factor.net/). It describes a set of principles and best practices. Its third factor prescribes that *configuration and secrets be externalized outside of the code base.*
 
-To address this concern, the .NET Core platform includes a [Secret Manager](https://docs.microsoft.com/aspnet/core/security/app-secrets?view=aspnetcore-5.0&tabs=windows#secret-manager) feature that stores sensitive data in a physical folder outside of the project tree. While secrets are outside of source control, this feature doesn't encrypt data. It's designed for **development purposes** only. 
+To address this concern, the .NET Core platform includes a [Secret Manager](https://docs.microsoft.com/aspnet/core/security/app-secrets?view=aspnetcore-5.0&tabs=windows#secret-manager) feature that stores sensitive data in a physical folder outside of the project tree. While secrets are outside of source control, this feature doesn't encrypt data. It's designed for **development purposes** only.
 
 A more modern and secure practice is to isolate secrets in a secrets management tool like **Hashicorp Vault** or **Azure Key Vault**.  These tools enable you to store secrets externally, vary credentials across environments, and reference them from application code. However, each tool has its complexities and learning curve.
 
@@ -27,14 +27,14 @@ Dapr offers a building block that simplifies managing secrets.
 
 ## What it solves
 
-The Dapr [Secrets Management building block](https://docs.dapr.io/developing-applications/building-blocks/secrets/secrets-overview/) abstracts away the complexity of working with secrets and secret management tools. 
+The Dapr [Secrets Management building block](https://docs.dapr.io/developing-applications/building-blocks/secrets/secrets-overview/) abstracts away the complexity of working with secrets and secret management tools.
 
- - It hides the underlying plumbing through a unified interface.
- - It supports various *pluggable* secret stores components, which can vary between development and production. 
- - Applications don't require direct dependencies on secret store libraries. 
- - Developers don't require detailed knowledge of each secret store.
+- It hides the underlying plumbing through a unified interface.
+- It supports various *pluggable* secret stores components, which can vary between development and production.
+- Applications don't require direct dependencies on secret store libraries.
+- Developers don't require detailed knowledge of each secret store.
 
-Dapr handles all of the above concerns. 
+Dapr handles all of the above concerns.
 
 Access to the secrets is secured through authentication and authorization. Only an application with sufficient rights can access secrets. Applications running in Kubernetes can also use its built-in secrets management mechanism.
 
@@ -63,7 +63,7 @@ The URL contains the following segments:
  > [!NOTE]
  > The above URL represents the native Dapr API call available to any development platform that supports HTTP or gRPC. Popular platforms like .NET, Java, and Go have their own custom APIs.
 
-The JSON response contains the key and value of the secret. 
+The JSON response contains the key and value of the secret.
 
 Figure 10-1 shows how Dapr handles a request for the secrets management API:
 
@@ -107,13 +107,13 @@ string connectionString = secrets["customerdb"];
 
 Arguments for the `GetSecretAsync` method include:
 
- - The name of the Dapr secret store component ('secrets-store')
- - The secret to retrieve ('eshopsecrets')
- - Optional metadata key/value pairs ('version_id=3')
+- The name of the Dapr secret store component ('secrets-store')
+- The secret to retrieve ('eshopsecrets')
+- Optional metadata key/value pairs ('version_id=3')
 
 The method responds with a dictionary object as a secret can contain multiple key/value pairs. In the example above, the secret named `customerdb` is referenced from the collection to return a connection string.
 
-The Dapr .NET SDK also features a .NET configuration provider. It loads specified secrets into the underlying [.NET Core configuration API](https://docs.microsoft.com/aspnet/core/fundamentals/configuration/?view=aspnetcore-5.0). The running application can then reference secrets from the `IConfiguration` dictionary that is registered in ASP.NET Core dependency injection. 
+The Dapr .NET SDK also features a .NET configuration provider. It loads specified secrets into the underlying [.NET Core configuration API](https://docs.microsoft.com/aspnet/core/fundamentals/configuration/?view=aspnetcore-5.0). The running application can then reference secrets from the `IConfiguration` dictionary that is registered in ASP.NET Core dependency injection.
 
 The secrets configuration provider is available from the [Dapr.Extensions.Configuration](https://www.nuget.org/packages/Dapr.Extensions.Configuration) NuGet package. The provider can be registered in the `Program.cs` of an ASP.NET Web API application:  
 
@@ -181,7 +181,7 @@ spec:
     value: [property value]
 ```
 
-All Dapr component configuration files require a `name` along with an optional `namespace` value. Additionally, the `type` field in the `spec` section specifies the type of secret store component. The properties in the `metadata` section differ per secret store. 
+All Dapr component configuration files require a `name` along with an optional `namespace` value. Additionally, the `type` field in the `spec` section specifies the type of secret store component. The properties in the `metadata` section differ per secret store.
 
 ### Indirectly consuming Dapr secrets
 
@@ -202,7 +202,7 @@ spec:
     value: e$h0p0nD@pr
 ```
 
-The above configuration file contains a **clear-text** password for connecting to the Redis server. **Hardcoded** passwords are always a bad idea. Pushing this configuration file to a public repository would expose the password. Storing the password in a secret store would dramatically improve this scenario. 
+The above configuration file contains a **clear-text** password for connecting to the Redis server. **Hardcoded** passwords are always a bad idea. Pushing this configuration file to a public repository would expose the password. Storing the password in a secret store would dramatically improve this scenario.
 
 The following examples demonstrate this using several different secret stores.
 
@@ -262,7 +262,7 @@ The `nestedSeparator` in a Dapr configuration file specifies a character to *fla
 }
 ```
 
-Using a colon as a separator, you can retrieve the `customerdb` connection-string using the key `connectionStrings:customerdb`. 
+Using a colon as a separator, you can retrieve the `customerdb` connection-string using the key `connectionStrings:customerdb`.
 
  > [!NOTE]
  > The colon is the default separator value.
@@ -321,7 +321,7 @@ auth:
   secretStore: kubernetes
 ```
 
-The `secretKeyRef` element specifies the name of the Kubernetes secret and the secret's key, `eshopsecrets`, and `redisPassword` respectively. The `auth` metadata section instructs Dapr to use the Kubernetes secrets management component. 
+The `secretKeyRef` element specifies the name of the Kubernetes secret and the secret's key, `eshopsecrets`, and `redisPassword` respectively. The `auth` metadata section instructs Dapr to use the Kubernetes secrets management component.
 
  > [!NOTE]
  > Auth is the default value when using Kubernetes secrets and can be omitted.
@@ -382,7 +382,7 @@ Now the application can retrieve the Redis password from the Azure Key Vault.
 
 #### Using Key Vault when running on Kubernetes
 
-Consuming Azure KeyVault with Dapr and Kubernetes also requires a service principal to authenticate against the Azure Key Vault. 
+Consuming Azure KeyVault with Dapr and Kubernetes also requires a service principal to authenticate against the Azure Key Vault.
 
 First, create a *Kubernetes secret* that contains a certificate file using the kubectl CLI tool:
 
@@ -544,7 +544,7 @@ The Dapr .NET SDK provides a `DaprClient` object to retrieve secrets. It also in
 
 You can use secret scopes to control access to specific secrets.
 
-## References 
+## References
 
 - [Beyond the Twelve-Factor Application](https://tanzu.vmware.com/content/blog/beyond-the-twelve-factor-app)
 
