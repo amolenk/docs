@@ -3,6 +3,7 @@ title: The Dapr secrets management building block
 description: What exactly is the Dapr secrets management building block and how can I apply it to my applications
 author: edwinvw
 ms.date: 1/21/2020
+ms.reviewer: robvet
 ---
 
 # The Dapr secrets management building block
@@ -70,6 +71,8 @@ Figure 10-1 shows how Dapr handles a request for the secrets management API:
 ![Diagram of retrieving a secret using the Dapr secrets management API.](media/secrets-management/retrieve-secret.png)
 
 **Figure 10-1**. Retrieving a secret with the Dapr secrets management API
+
+Note the steps in the previous figure:
 
 1. The service calls the Dapr secrets management API, along with the name of the secret store, and secret to retrieve.
 1. The Dapr sidecar retrieves the specified secret from the secrets store.
