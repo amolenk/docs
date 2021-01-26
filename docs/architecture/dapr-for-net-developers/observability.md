@@ -425,7 +425,7 @@ helm install dapr dapr/dapr --namespace dapr-system --set global.logAsJson=true
 
 #### Collecting logs
 
-The logs emitted by Dapr can be fed into a monitoring backend for analysis. A log collector is a component that collects logs from a system and  sends it to a monitoring backend. A popular log collector is [Fluentd][10]. Check out the [How-To: Set up Fluentd, Elastic search and Kibana in Kubernetes](https://v1-rc2.docs.dapr.io/operations/monitoring/fluentd/) in the Dapr documentation. This article contains instructions for setting up Fluentd as log collector, Elastic Search as monitoring backend and Kibana as monitoring front-end.
+The logs emitted by Dapr can be fed into a monitoring backend for analysis. A log collector is a component that collects logs from a system and  sends it to a monitoring backend. A popular log collector is [Fluentd][10]. Check out the [How-To: Set up Fluentd, Elastic search and Kibana in Kubernetes](https://v1-rc2.docs.dapr.io/operations/monitoring/fluentd/) in the Dapr documentation. This article contains instructions for setting up Fluentd as log collector and the [ELK Stack][11] (Elastic Search and Kibana) as monitoring backend.
 
 ### Health status
 
@@ -516,12 +516,27 @@ The .NET SDK does not contain any specific observability features. All observabi
 
 If you want to emit telemetry from your .NET application, you need to use the SDK for the monitoring tool of your choice. The [OpenTelemetry SDK for .NET][9] for instance allows you to publish your application's telemetry using the Open Telemetry standard. Follow the specific SDK's documentation on how to configure and use it.
 
-## Reference architecture: eShopOnDapr [WIP]
+## Reference architecture: eShopOnDapr
 
-> **TODO**
->
-> - Telemetry
-> - Custom health dashboard
+Observability in eShopOnDapr consists of several parts. Obviously, the Dapr telemetry from all the sidecars is produced. But there are also some other observability features that were inherited from the eShopOnContainers sample that served as the base for eShopOnDapr.
+
+### Custom health dashboard
+
+The **WebStatus** project in eShopOnDapr is a custom health dashboard that gives insight into the health of the eShop services. This dashboard does not use the Dapr health API but uses the built-in [health checks mechanism](https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks?view=aspnetcore-3.1) of ASP.NET Core. A nice feature of this dashboard, is that it not only provides the health status of the services, but also the health of the dependencies of the services. A service that uses a database for instance, will also provide the health status of this database using the built-in database probe as shown in Figure 9-9:
+
+![eShopOnDapr custom health dashboard](media/observability/eshop-health-dashboard.png)
+
+**Figure 9-9**: eShopOnDapr custom health dashboard
+
+### Seq log aggregator
+
+[Seq][12] is a popular log aggregator server that is used in eShopOnDapr for log aggregation. Seq only ingests logging from the application services and not from the Dapr system services or sidecars. Seq ingests and indexes the structured application logging and offers a web front-end for analyzing and querying the logs. It also offers functionality for building monitoring dashboards.
+
+The application services emit structured logging using the [SeriLog][13] logging library. Serilog publishes logging using so called "sinks". Many sinks are available, including one for Seq. This sink is used in eShopOnDapr.
+
+### Application Insights
+
+All the eShopOnDapr services send telemetry directly to Azure Application Insights using the Microsoft Application Insights SDK for .NET Core. See [Azure Application Insights for ASP.NET Core applications](https://docs.microsoft.com/en-us/azure/azure-monitor/app/asp-net-core) in the Microsoft docs for more information on how to use Application Insights with ASP.NET Core.
 
 ## Summary
 
@@ -531,7 +546,7 @@ Dapr offers observability by producing different types of telemetry: distributed
 
 Dapr only produces telemetry for the Dapr system services and sidecars. Telemetry from your application code is not automatically included. You can however use a specific SDK like the [OpenTelemetry SDK for .NET][9] to emit telemetry from your application code.
 
-Dapr telemetry is produced in an open-standards based format so it can be ingested by a large set of available monitoring tools. Some examples are: Zipkin, Azure Application Insights, ELK Stack, New Relic, Datadog or Grafana.
+Dapr telemetry is produced in an open-standards based format so it can be ingested by a large set of available monitoring tools. Some examples are: [Zipkin][3], [Azure Application Insights][1], [ELK Stack][11], [New Relic][6], or [Grafana][8].
 
 You need to deploy a telemetry collector or scraper with your Dapr application, that picks up the telemetry and forwards it to the monitoring backend.
 
@@ -551,3 +566,6 @@ Dapr offers a dashboard out of the box that presents information about the Dapr 
 [8]: https://grafana.com/grafana/ "Grafana"
 [9]: https://opentelemetry.io/docs/net/ "Open Telemetry SDK for .NET"
 [10]: <https://www.fluentd.org/> "Fluentd"
+[11]: https://www.elastic.co/elastic-stack "ELK stack"
+[12]: https://datalust.co/seq "Seq"
+[13]: https://serilog.net/ "Serilog"
