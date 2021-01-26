@@ -264,12 +264,6 @@ apiVersion: dapr.io/v1alpha1
 
 Check out the [Jaeger][5] and [New Relic][6] websites for more information on how to use them.
 
-> **TODO**
->
-> - Configuration
->   - AI with OTEL connector sample
->   - AKS with Prometheus
-
 ### Metrics
 
 Metrics provide insight into performance and resource consumption. By default, Dapr emits system metrics for the Dapr system services like Operator, Sidecar-Injector, etcetera. These metrics are also referred to as the Dapr "system" metrics. Dapr also emits metrics for Dapr sidecars. These are also referred to as Dapr "runtime" metrics. Dapr uses the [Prometheus][7] metrics standard and each Dapr sidecar exposes a metrics endpoint on port `9090`. A *Prometheus scraper* calls this endpoint at a certain interval to collect all the metrics. The scraper sends them to a monitoring backend. You deploy a metrics scraper together with your application. Figure 9-6 shows an example of how this works:
