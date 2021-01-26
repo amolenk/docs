@@ -12,9 +12,9 @@ The information used to gain observability is often referred to as **telemetry**
 1. **Distributed tracing** provides insight into the traffic between the services and which services are involved in distributed transactions.
 1. **Metrics** provide insight into the performance and resource consumption of a service.
 1. **Logging** provides insight into how a service behaves at runtime and whether any errors have occurred.
-1. **Health** status of a service provides insight into the availability of the service.
+1. **Health status** of a service provides insight into the availability of the service.
 
-Whether or not all telemetry categories are available depends on the observability features offered by the platform your application runs on. An example of a platform that offers all the categories is Microsoft Azure, for instance. Azure offers a service called **Application Insights** (or "App Insights"). This service is automatically enabled for most of the available Azure IaaS and PaaS services. When an application is built using these Azure services, telemetry is gathered automatically and sent to App Insights. This includes logging from the application code, exceptions that occurred in the code, metrics on the resource utilization of the services, duration and status-code of all requests sent to service and more. App Insights can even automatically draw a diagram with the dependencies between services based on their communication.
+Whether or not all telemetry categories are available depends on the observability features offered by the platform your application runs on. An example of a platform that offers all the categories is Microsoft Azure, for instance. Azure offers a service called [Application Insights][1] (or "App Insights"). This service is available for most of the available Azure IaaS and PaaS services. When an application is built using these Azure services, telemetry is gathered automatically and sent to App Insights. This includes logging from the application code, exceptions that occurred in the code, metrics on the resource utilization of the services, duration and status-code of all requests sent to service and more. App Insights can even automatically draw a diagram with the dependencies between services based on their communication.
 
 Let's look at what Dapr can offer when it comes to observability.
 
@@ -32,7 +32,7 @@ Let's dive in and see how observability works in Dapr!
 
 ## How it works
 
-The fact that Dapr uses a sidecar architecture (as explained in [Chapter 2](dapr-at-20000-feet.md)), enables a lot of the observability features. Because services communicate using the Dapr sidecars, the sidecars can intercept all communication between the services. Together with logging and metrics, the sidecars can provide all the necessary telemetry to monitor your application. The telemetry is provided in a format based on open standards. Out of the box, Dapr supports [OpenTelemetry](https://opentelemetry.io/) and [Zipkin](https://zipkin.io/). This means that many monitoring backends can ingest the Dapr telemetry for analysis and querying. But how does that work?
+The fact that Dapr uses a sidecar architecture (as explained in [Chapter 2](dapr-at-20000-feet.md)), enables a lot of the observability features. Because services communicate using the Dapr sidecars, the sidecars can intercept all communication between the services. Together with logging and metrics, the sidecars can provide all the necessary telemetry to monitor your application. The telemetry is provided in a format based on open standards. Out of the box, Dapr supports [OpenTelemetry][2] and [Zipkin][3]. This means that many monitoring backends can ingest the Dapr telemetry for analysis and querying. But how does that work?
 
 Dapr offers the ability to configure **collectors** that collect the telemetry and publish it to a monitoring backend. Dapr can integrate with several different monitoring backends, including Application Insights. In Figure 9-1, you see an overview of the Dapr observability architecture:
 
@@ -53,7 +53,7 @@ As stated in the introduction, we can identify four different categories of tele
 
 ### Distributed tracing
 
-Distributed tracing provides insight into the traffic that flows between the services in a distributed application. The log of all the requests and responses (or messages) exchanged between services is an invaluable source of information for troubleshooting issues. Still, it is hard to correlate traffic that is part of a distributed business transaction across multiple services. Dapr uses the [W3C Trace Context](https://www.w3.org/TR/trace-context/) standard for this.
+Distributed tracing provides insight into the traffic that flows between the services in a distributed application. The log of all the requests and responses (or messages) exchanged between services is an invaluable source of information for troubleshooting issues. Still, it is hard to correlate traffic that is part of a distributed business transaction across multiple services. Dapr uses the [W3C Trace Context][4] standard for this.
 
 The W3C Trace Context is a specification for injecting context information into requests and responses to correlate them. Dapr uses this standard to correlate requests that are part of the same flow. In Figure 9-2 you see an example of how this works:
 
@@ -78,7 +78,7 @@ The next sections are focused on how to inspect tracing telemetry by publishing 
 
 #### Using Zipkin as monitoring backend
 
-[Zipkin](https://zipkin.io/) is an open-source distributed tracing system. It can ingest and visualize telemetry data. Dapr offers support for Zipkin out of the box. This example demonstrates how to configure Zipkin to visualize Dapr telemetry.
+[Zipkin][3] is an open-source distributed tracing system. It can ingest and visualize telemetry data. Dapr offers support for Zipkin out of the box. This example demonstrates how to configure Zipkin to visualize Dapr telemetry.
 
 ##### Enable and configure tracing
 
@@ -232,7 +232,7 @@ The animated dots on the lines between the services represent requests and move 
 
 #### Using Jaeger or New Relic as monitoring backend
 
-Besides Zipkin, other monitoring backends exist that can ingest telemetry in the Zipkin format. Examples are Jaeger and New Relic. To use them, you specify an `endpointAddress` pointing to either a Jaeger or New Relic server in the Dapr configuration file. Here is an example of a configuration file that configures Dapr to send telemetry to a Jaeger server. The URL for Jaeger API is identical to the URL for the Zipkin API. The only difference with the config file in the Zipkin example is the port the server is running on:
+Besides Zipkin, other monitoring backends exist that can ingest telemetry in the Zipkin format. Examples are [Jaeger][5] and [New Relic][6]. To use them, you specify an `endpointAddress` pointing to either a Jaeger or New Relic server in the Dapr configuration file. Here is an example of a configuration file that configures Dapr to send telemetry to a Jaeger server. The URL for Jaeger API is identical to the URL for the Zipkin API. The only difference with the config file in the Zipkin example is the port the server is running on:
 
  ```yaml
  apiVersion: dapr.io/v1alpha1
@@ -262,7 +262,7 @@ apiVersion: dapr.io/v1alpha1
        endpointAddress: "https://trace-api.newrelic.com/trace/v1?Api-Key=<NR-API-KEY>&Data-Format=zipkin&Data-Format-Version=2"
  ```
 
-Check out the [Jaeger](https://www.jaegertracing.io/) and [New Relic](https://newrelic.com/) websites for more information on how to use them.
+Check out the [Jaeger][5] and [New Relic][6] websites for more information on how to use them.
 
 > **TODO**
 >
@@ -272,7 +272,7 @@ Check out the [Jaeger](https://www.jaegertracing.io/) and [New Relic](https://ne
 
 ### Metrics
 
-Metrics provide insight into performance and resource consumption. By default, Dapr emits system metrics for the Dapr system services like Operator, Sidecar-Injector, etcetera. These metrics are also referred to as the Dapr "system" metrics. Dapr also emits metrics for Dapr sidecars. These are also referred to as Dapr "runtime" metrics. Dapr uses the [Prometheus](https://prometheus.io/) metrics standard and each Dapr sidecar exposes a metrics endpoint on port `9090`. A *Prometheus scraper* calls this endpoint at a certain interval to collect all the metrics. The scraper sends them to a monitoring backend. You deploy a metrics scraper together with your application. Figure 9-6 shows an example of how this works:
+Metrics provide insight into performance and resource consumption. By default, Dapr emits system metrics for the Dapr system services like Operator, Sidecar-Injector, etcetera. These metrics are also referred to as the Dapr "system" metrics. Dapr also emits metrics for Dapr sidecars. These are also referred to as Dapr "runtime" metrics. Dapr uses the [Prometheus][7] metrics standard and each Dapr sidecar exposes a metrics endpoint on port `9090`. A *Prometheus scraper* calls this endpoint at a certain interval to collect all the metrics. The scraper sends them to a monitoring backend. You deploy a metrics scraper together with your application. Figure 9-6 shows an example of how this works:
 
 ![Scraping Prometheus metrics ](media/observability/prometheus-scraper.png)
 
@@ -320,7 +320,7 @@ spec:
 
 #### Visualizing Dapr metrics
 
-As stated, you need a Prometheus scraper deployed with your application to collect the metrics. But looking at a bunch of raw metrics is not something that people are very good at. A good way to analyze metrics is using a visualization tool like **Grafana**. Grafana offers the ability to create dashboards from the available metrics. In Figure 9-7 you can see an example of a dashboard showing several system metrics:
+As stated, you need a Prometheus scraper deployed with your application to collect the metrics. But looking at a bunch of raw metrics is not something that people are very good at. A good way to analyze metrics is using a visualization tool like [Grafana][8]. Grafana offers the ability to create dashboards from the available metrics. In Figure 9-7 you can see an example of a dashboard showing several system metrics:
 
 ![Grafana dashboard showing Dapr system metrics](media/observability/grafana-sample.png)
 
@@ -328,30 +328,30 @@ As stated, you need a Prometheus scraper deployed with your application to colle
 
 Instructions on how to set this up The Dapr documentation features a [tutorial for installing Prometheus and Grafana](https://docs.dapr.io/operations/monitoring/grafana/).
 
-### Logging [WIP]
+### Logging
 
-Logging provides insight into what is happening with a service at runtime. When running the application with Dapr, all the logging from the Dapr sidecars and system services is available for publishing to a monitoring backend.  
+Logging provides insight into what is happening with a service at runtime. When running the application with Dapr, it emits all the logging from the Dapr sidecars and system services automatically. Logging from your application code is not automatically included. You can however use a specific SDK like the [OpenTelemetry SDK for .NET][9] to emit logging from your application code.  
 
-> **TODO elaborate**
+#### Log entry structure
 
-#### Log entry format
+Dapr emits structured logging. Each log entry has the following structure:
 
- Dapr produces log entries using the following structure:
+| Field    | Description                                          | Example                             |
+| -------- | ---------------------------------------------------- | ----------------------------------- |
+| time     | ISO8601 formatted timestamp                          | `2021-01-10T14:19:31.000Z`          |
+| level    | Level of the entry (debug \| info \| warn  \| error) | `info`                              |
+| type     | Log Type                                             | `log`                               |
+| msg      | Log Message                                          | `metrics server started on :62408/` |
+| scope    | Logging Scope                                        | `dapr.runtime`                      |
+| instance | Hostname where Dapr runs                             | TSTSRV01                            |
+| app_id   | Dapr App ID                                          | ordering-api                        |
+| ver      | Dapr Runtime Version                                 | `1.0.0`-rc.2                        |
 
-| Field    | Description                                         | Example                             |
-| -------- | --------------------------------------------------- | ----------------------------------- |
-| time     | ISO8601 formatted timestamp                         | `2021-01-10T14:19:31.000Z`          |
-| level    | Level of the entry (info \| warn \| debug \| error) | `info`                              |
-| type     | Log Type                                            | `log`                               |
-| msg      | Log Message                                         | `metrics server started on :62408/` |
-| scope    | Logging Scope                                       | `dapr.runtime`                      |
-| instance | Hostname where Dapr runs                            | TSTSRV01                            |
-| app_id   | Dapr App ID                                         | ordering-api                        |
-| ver      | Dapr Runtime Version                                | `1.0.0`-rc.2                        |
+When searching through logging in a troubleshooting scenario, the `time` and `level` fields are particularly useful. The time field allows ordering the logging and selecting the logging emitted during a specific timeslot. When troubleshooting some bug, debug level logging gives you more information on the behavior of the code. 
 
-#### Unstructured vs. structured logging
+#### Plain text vs. JSON format
 
-By default, Dapr emits logging in plain-text format. Here's an example of some logging:
+By default, Dapr emits structured logging in plain-text format. Here's an example of some logging:
 
 ```text
 == DAPR == time="2021-01-12T16:11:39.4669323+01:00" level=info msg="starting Dapr Runtime -- version 1.0.0-rc.2 -- commit 196483d" app_id=ordering-api instance=TSTSRV03 scope=dapr.runtime type=log ver=1.0.0-rc.2
@@ -359,7 +359,7 @@ By default, Dapr emits logging in plain-text format. Here's an example of some l
 == DAPR == time="2021-01-12T16:11:39.467933+01:00" level=info msg="metrics server started on :62408/" app_id=ordering-api instance=TSTSRV03 scope=dapr.metrics type=log ver=1.0.0-rc.2
 ```
 
-Every log entry is formatted as a string containing key/value pairs. This is called *unstructured* logging because it hard to parse by a tool. If you are planning to put the logging into a monitoring tool so you can search through it, it is recommended to use *structured* logging. With structured logging, each log entry is formatted as a JSON object. This format can be parsed by a tool and all the individual fields of the entry can be indexed so they can be used in queries. Here is an example of the same logging in structured format:
+Every log entry is formatted as a string containing key/value pairs. This format is relatively hard to parse. If you are planning to put the logging into a monitoring tool so you can search through it, it is recommended to use JSON formatted logging. Each log entry is then formatted as a JSON object which is easier to parse. A monitoring tool can now index all the individual fields so they can be used in queries. Here is an example of the same logging in JSON format:
 
 ```json
 {"app_id": "ordering-api", "instance": "TSTSRV03", "level": "info", "msg": "starting Dapr Runtime -- version 1.0.0-rc.2 -- commit 196483d", "scope": "dapr.runtime", "time": "2021-01-12T16:11:39.4669323+01:00", "type": "log", "ver": "1.0.0-rc.2"}
@@ -367,13 +367,13 @@ Every log entry is formatted as a string containing key/value pairs. This is cal
 {"app_id": "ordering-api", "instance": "TSTSRV03", "level": "info", "msg": "metrics server started on :62408/", "scope": "dapr.metrics", "type": "log", "time": "2021-01-12T16:11:39.467933+01:00", "ver": "1.0.0-rc.2"}
 ```
 
-To enable structured logging, you need to configure Dapr to do so. In standalone mode, you enable structured logging by specifying the flag `--log-as-json` on the command-line:
+To enable JSON formatting, you need to configure that for each Dapr sidecar. In standalone mode, you enable structured logging by specifying the flag `--log-as-json` on the command-line:
 
 ```bash
 dapr run --app-id ordering-api --log-level info --log-as-json dotnet run
 ```
 
-In Kubernetes, you enable structured logging by adding a `dapr.io/log-as-json` annotation to the deployment:
+In Kubernetes, you enable JSON formatted logging for the Dapr sidecars by adding a `dapr.io/log-as-json` annotation to every deployment in your application:
 
 ```yaml
 kind: Deployment
@@ -399,7 +399,7 @@ spec:
         dapr.io/app-id: "ordering-api"
         dapr.io/app-port: "80"
         dapr.io/config: "dapr-config"
-        dapr.io/log-as-json: "true"   # use structured logging
+        dapr.io/log-as-json: "true"   # use JSON formatted logging
     spec:
       containers:
         - name: ordering-api
@@ -414,18 +414,22 @@ spec:
                 name: ordering-cm
 ```
 
+When you install Dapr in a Kubernetes cluster using Helm, you can enable JSON formatted logging for all the Dapr system services:
+
+```bash
+helm repo add dapr https://dapr.github.io/helm-charts/
+helm repo update
+kubectl create namespace dapr-system
+helm install dapr dapr/dapr --namespace dapr-system --set global.logAsJson=true
+```
+
 #### Collecting logs
 
-The logs emitted by Dapr can be fed into a monitoring backend for analysis. A **log collector** is a component that collects logs from a system and  
+The logs emitted by Dapr can be fed into a monitoring backend for analysis. A log collector is a component that collects logs from a system and  sends it to a monitoring backend. A popular log collector is [Fluentd][10]. Check out the [How-To: Set up Fluentd, Elastic search and Kibana in Kubernetes](https://v1-rc2.docs.dapr.io/operations/monitoring/fluentd/) in the Dapr documentation. This article contains instructions for setting up Fluentd as log collector, Elastic Search as monitoring backend and Kibana as monitoring front-end.
 
-> **TODO**
->
-> - Log collectors
-> - FluentD + ELK sample
+### Health status
 
-### Health
-
-The health status of a service provides insight into the availability of the service. Each Dapr sidecar exposes a health API that can be used by the hosting environment to determine the health of the sidecar. The API has 1 operation:
+The health status of a service provides insight into its availability. Each Dapr sidecar exposes a health API that can be used by the hosting environment to determine the health of the sidecar. The API has 1 operation:
 
 ```bash
 GET http://localhost:3500/v1.0/healthz
@@ -438,7 +442,11 @@ The operation returns an HTTP status code:
 
 When running in stand-alone mode, there is nothing that invokes the health API automatically. You can invoke the API though from your application code or a health monitoring tool.
 
-When running in Kubernetes, the Dapr sidecar-injector automatically configures Kubernetes to use the health API for executing *liveness probes* and *readiness probes*. Kubernetes uses liveness probes to determine whether a container is up and running. If a liveness probe returns a failure code, Kubernetes will assume the container is dead and automatically restart it. This is one of the features of Kubernetes that increases the overall availability of your application. Kubernetes uses readiness probes to determine whether a container is ready to start accepting traffic. A pod is considered ready when all the containers it contains are ready. One of the ways readiness probes are used in Kubernetes, is to determine whether a Kubernetes service can direct traffic to a pod in a load balancing scenario. Pods that are not ready are automatically removed from the load-balancer.
+When running in Kubernetes, the Dapr sidecar-injector automatically configures Kubernetes to use the health API for executing *liveness probes* and *readiness probes*. 
+
+Kubernetes uses liveness probes to determine whether a container is up and running. If a liveness probe returns a failure code, Kubernetes will assume the container is dead and automatically restart it. This is one of the features of Kubernetes that increases the overall availability of your application. 
+
+Kubernetes uses readiness probes to determine whether a container is ready to start accepting traffic. A pod is considered ready when all the containers it contains are ready. One of the ways readiness probes are used in Kubernetes, is to determine whether a Kubernetes service can direct traffic to a pod in a load balancing scenario. Pods that are not ready are automatically removed from the load-balancer.
 
 The liveness and readiness probes have several configurable parameters. They are configured in the container spec section of a pod's configuration file. By default, Dapr uses this configuration for each sidecar container:
 
@@ -492,7 +500,7 @@ The dashboard opens with an overview of all services in your application that ha
 
 The Dapr dashboard is invaluable when troubleshooting a Dapr application. It shows information about the Dapr sidecars and all the Dapr system services that make up the Dapr control Plane. You can drill down into the applied configuration of all these services and even look at the logging of every individual container.
 
-The dashboard also shows the configured components for your application. Figure 9-8 shows an example:
+The dashboard also shows the configured components (and their configuration) for your application. Figure 9-8 shows an example:
 
 ![Dapr dashboard components page](media/observability/dapr-dashboard-components.png)
 
@@ -506,9 +514,9 @@ Check out the [Dapr dashboard CLI command reference](https://docs.dapr.io/refere
 
 The .NET SDK does not contain any specific observability features. All observability features are offered at the Dapr level.
 
-If you want to emit telemetry from your .NET application, you need to use the SDK for the monitoring tool of your choice. The [OpenTelemetry SDK for .NET](https://opentelemetry.io/docs/net/) for instance allows you to publish your application's telemetry using the Open Telemetry standard. Follow the specific SDK's documentation on how to configure and use it.
+If you want to emit telemetry from your .NET application, you need to use the SDK for the monitoring tool of your choice. The [OpenTelemetry SDK for .NET][9] for instance allows you to publish your application's telemetry using the Open Telemetry standard. Follow the specific SDK's documentation on how to configure and use it.
 
-## Reference architecture: eShopOnDapr
+## Reference architecture: eShopOnDapr [WIP]
 
 > **TODO**
 >
@@ -521,7 +529,7 @@ Good observability is crucial when running a distributed system in production.
 
 Dapr offers observability by producing different types of telemetry: distributed tracing, logging, metrics and health status.
 
-Dapr only produces telemetry for the Dapr system services and sidecars. Telemetry from your application code is not automatically included. You can however use a specific SDK like the Open Telemetry SDK for .NET to emit telemetry from your application code.
+Dapr only produces telemetry for the Dapr system services and sidecars. Telemetry from your application code is not automatically included. You can however use a specific SDK like the [OpenTelemetry SDK for .NET][9] to emit telemetry from your application code.
 
 Dapr telemetry is produced in an open-standards based format so it can be ingested by a large set of available monitoring tools. Some examples are: Zipkin, Azure Application Insights, ELK Stack, New Relic, Datadog or Grafana.
 
@@ -532,3 +540,14 @@ Dapr can be configured to emit structured logging. Structured logging is easier 
 Dapr offers a dashboard out of the box that presents information about the Dapr services and configuration.
 
 ## References
+
+[1]: https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview/	"Azure Application Insights"
+[2]: https://opentelemetry.io/	"Open Telemetry"
+[3]: https://zipkin.io/	"Zipkin"
+[4]: https://www.w3.org/TR/trace-context/	"W3C Trace Context"
+[5]: https://www.jaegertracing.io/	"Jaeger"
+[6]: https://newrelic.com/	"New Relic"
+[7]: https://prometheus.io/	"Prometheus"
+[8]: https://grafana.com/grafana/	"Grafana"
+[9]: https://opentelemetry.io/docs/net/	"Open Telemetry SDK for .NET"
+[10]: <https://www.fluentd.org/> "Fluentd"
