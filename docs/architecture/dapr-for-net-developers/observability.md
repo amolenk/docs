@@ -1,7 +1,7 @@
 title: Dapr Observability
 description: A description of the observability features of Dapr and how to apply them
 author: edwinvw
-ms.date: 01/24/2020
+ms.date: 01/26/2020
 
 # Dapr observability
 
@@ -425,11 +425,82 @@ The logs emitted by Dapr can be fed into a monitoring backend for analysis. A **
 
 ### Health
 
-> **TODO**
->
-> - /healtz endpoint
-> - Sample request / response
-> - Health / Readiness probe in Kubernetes
+The health status of a service provides insight into the availability of the service. Each Dapr sidecar exposes a health API that can be used by the hosting environment to determine the health of the sidecar. The API has 1 operation:
+
+```bash
+GET http://localhost:3500/v1.0/healthz
+```
+
+The operation returns an HTTP status code:
+
+- 204: the sidecar is healthy
+- 500: the sidecar is not healthy
+
+When running in stand-alone mode, there is nothing that invokes the health API automatically. You can invoke the API though from your application code or a health monitoring tool. 
+
+When running in Kubernetes, the Dapr sidecar-injector automatically configures Kubernetes to use the health API for executing *liveness probes* and *readiness probes*. Kubernetes uses liveness probes to determine whether a container is up and running. If a liveness probe returns a failure code, Kubernetes will assume the container is dead and automatically restart it. This is one of the features of Kubernetes that increases the overall availability of your application. Kubernetes uses readiness probes to determine whether a container is ready to start accepting traffic. A pod is considered ready when all the containers it contains are ready. One of the ways readiness probes are used in Kubernetes, is to determine whether a Kubernetes service can direct traffic to a pod in a load balancing scenario. Pods that are not ready are automatically removed from the load-balancer.
+
+The liveness and readiness probes have several configurable parameters. They are configured in the container spec section of a pod's configuration file. By default, Dapr uses this configuration for each sidecar container:
+
+```yaml
+livenessProbe:
+      httpGet:
+        path: v1.0/healthz
+        port: 3500
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds : 5
+      failureThreshold : 3
+readinessProbe:
+      httpGet:
+        path: v1.0/healthz
+        port: 3500
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds : 5
+      failureThreshold: 3
+```
+
+ The parameters are: 
+
+-  The `path` to the health API.
+- The `port` the Dapr sidecar runs on for HTTP request.
+- The `initialDelaySeconds`: the number of seconds Kubernetes will wait before it starts probing a container for the first time.
+- The `periodSeconds`: the number of seconds Kubernetes will wait between each probe.
+- The `timeoutSeconds`: the number of seconds Kubernetes will wait on a response from the API before timing out. A timeout is interpreted as a failure.
+- The `failureThreshold`: the amount of failures Kubernetes will accept before considering the container as not alive or not ready.
+
+### Dapr dashboard [WIP]
+
+Dapr also offers a dashboard that gives information about Dapr applications, components, and configurations. The Dapr CLI offers a command for starting the dashboard and exposing it as a web-application on the local machine on port 8080:
+
+```bash
+dapr dashboard
+```
+
+When your Dapr application is running in Kubernetes, use:
+
+```bash
+dapr dashboard -k
+```
+
+The dashboard opens with an overview of all services in your application that have a Dapr sidecar. Figure 9-7 shows an example of the dashboard for the eShopOnDapr application running in Kubernetes: 
+
+![Dapr dashboard overview page](media/observability/dapr-dashboard-overview.png)
+
+**Figure 9-7**: Dapr dashboard overview page
+
+The Dapr dashboard is invaluable when troubleshooting a Dapr application. It shows information about the Dapr sidecars and all the Dapr system services that make up the Dapr control Plane. You can drill down into the applied configuration of all these services and even look at the logging of every individual container. 
+
+The dashboard also shows the configured components for your application. Figure 9-8 shows an example:
+
+![Dapr dashboard components page](media/observability/dapr-dashboard-components.png)
+
+**Figure 9-8**: Dapr dashboard components page
+
+There is a lot more information available in the dashboard. The best way to discover this is by running a Dapr application and browsing the dashboard. You can use the eShopOnDapr application for that.
+
+Check out the [Dapr dashboard CLI command reference](https://docs.dapr.io/reference/cli/dapr-dashboard/) in the Dapr docs for a description of the dashboard command and its command-line arguments. 
 
 ## Using the Dapr .NET SDK
 
