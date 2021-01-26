@@ -436,7 +436,7 @@ The operation returns an HTTP status code:
 - 204: the sidecar is healthy
 - 500: the sidecar is not healthy
 
-When running in stand-alone mode, there is nothing that invokes the health API automatically. You can invoke the API though from your application code or a health monitoring tool. 
+When running in stand-alone mode, there is nothing that invokes the health API automatically. You can invoke the API though from your application code or a health monitoring tool.
 
 When running in Kubernetes, the Dapr sidecar-injector automatically configures Kubernetes to use the health API for executing *liveness probes* and *readiness probes*. Kubernetes uses liveness probes to determine whether a container is up and running. If a liveness probe returns a failure code, Kubernetes will assume the container is dead and automatically restart it. This is one of the features of Kubernetes that increases the overall availability of your application. Kubernetes uses readiness probes to determine whether a container is ready to start accepting traffic. A pod is considered ready when all the containers it contains are ready. One of the ways readiness probes are used in Kubernetes, is to determine whether a Kubernetes service can direct traffic to a pod in a load balancing scenario. Pods that are not ready are automatically removed from the load-balancer.
 
@@ -461,16 +461,16 @@ readinessProbe:
       failureThreshold: 3
 ```
 
- The parameters are: 
+ The parameters are:
 
--  The `path` to the health API.
+- The `path` to the health API.
 - The `port` the Dapr sidecar runs on for HTTP request.
 - The `initialDelaySeconds`: the number of seconds Kubernetes will wait before it starts probing a container for the first time.
 - The `periodSeconds`: the number of seconds Kubernetes will wait between each probe.
 - The `timeoutSeconds`: the number of seconds Kubernetes will wait on a response from the API before timing out. A timeout is interpreted as a failure.
 - The `failureThreshold`: the amount of failures Kubernetes will accept before considering the container as not alive or not ready.
 
-### Dapr dashboard [WIP]
+### Dapr dashboard
 
 Dapr also offers a dashboard that gives information about Dapr applications, components, and configurations. The Dapr CLI offers a command for starting the dashboard and exposing it as a web-application on the local machine on port 8080:
 
@@ -484,13 +484,13 @@ When your Dapr application is running in Kubernetes, use:
 dapr dashboard -k
 ```
 
-The dashboard opens with an overview of all services in your application that have a Dapr sidecar. Figure 9-7 shows an example of the dashboard for the eShopOnDapr application running in Kubernetes: 
+The dashboard opens with an overview of all services in your application that have a Dapr sidecar. Figure 9-7 shows an example of the dashboard for the eShopOnDapr application running in Kubernetes:
 
 ![Dapr dashboard overview page](media/observability/dapr-dashboard-overview.png)
 
 **Figure 9-7**: Dapr dashboard overview page
 
-The Dapr dashboard is invaluable when troubleshooting a Dapr application. It shows information about the Dapr sidecars and all the Dapr system services that make up the Dapr control Plane. You can drill down into the applied configuration of all these services and even look at the logging of every individual container. 
+The Dapr dashboard is invaluable when troubleshooting a Dapr application. It shows information about the Dapr sidecars and all the Dapr system services that make up the Dapr control Plane. You can drill down into the applied configuration of all these services and even look at the logging of every individual container.
 
 The dashboard also shows the configured components for your application. Figure 9-8 shows an example:
 
@@ -500,12 +500,35 @@ The dashboard also shows the configured components for your application. Figure 
 
 There is a lot more information available in the dashboard. The best way to discover this is by running a Dapr application and browsing the dashboard. You can use the eShopOnDapr application for that.
 
-Check out the [Dapr dashboard CLI command reference](https://docs.dapr.io/reference/cli/dapr-dashboard/) in the Dapr docs for a description of the dashboard command and its command-line arguments. 
+Check out the [Dapr dashboard CLI command reference](https://docs.dapr.io/reference/cli/dapr-dashboard/) in the Dapr docs for a description of the dashboard command and its command-line arguments.
 
 ## Using the Dapr .NET SDK
 
+The .NET SDK does not contain any specific observability features. All observability features are offered at the Dapr level.
+
+If you want to emit telemetry from your .NET application, you need to use the SDK for the monitoring tool of your choice. The [OpenTelemetry SDK for .NET](https://opentelemetry.io/docs/net/) for instance allows you to publish your application's telemetry using the Open Telemetry standard. Follow the specific SDK's documentation on how to configure and use it.
+
 ## Reference architecture: eShopOnDapr
 
+> **TODO**
+>
+> - Telemetry
+> - Custom health dashboard
+
 ## Summary
+
+Good observability is crucial when running a distributed system in production.
+
+Dapr offers observability by producing different types of telemetry: distributed tracing, logging, metrics and health status.
+
+Dapr only produces telemetry for the Dapr system services and sidecars. Telemetry from your application code is not automatically included. You can however use a specific SDK like the Open Telemetry SDK for .NET to emit telemetry from your application code.
+
+Dapr telemetry is produced in an open-standards based format so it can be ingested by a large set of available monitoring tools. Some examples are: Zipkin, Azure Application Insights, ELK Stack, New Relic, Datadog or Grafana.
+
+You need to deploy a telemetry collector or scraper with your Dapr application, that picks up the telemetry and forwards it to the monitoring backend.
+
+Dapr can be configured to emit structured logging. Structured logging is easier to be indexed by a monitoring backend. This allows users to execute rich queries when searching through the logging.
+
+Dapr offers a dashboard out of the box that presents information about the Dapr services and configuration.
 
 ## References
