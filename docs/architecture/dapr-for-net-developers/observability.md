@@ -347,7 +347,7 @@ Dapr emits structured logging. Each log entry has the following structure:
 | app_id   | Dapr App ID                                          | ordering-api                        |
 | ver      | Dapr Runtime Version                                 | `1.0.0`-rc.2                        |
 
-When searching through logging in a troubleshooting scenario, the `time` and `level` fields are particularly useful. The time field allows ordering the logging and selecting the logging emitted during a specific timeslot. When troubleshooting some bug, debug level logging gives you more information on the behavior of the code. 
+When searching through logging in a troubleshooting scenario, the `time` and `level` fields are particularly useful. The time field allows ordering the logging and selecting the logging emitted during a specific timeslot. When troubleshooting some bug, debug level logging gives you more information on the behavior of the code.
 
 #### Plain text vs. JSON format
 
@@ -442,9 +442,9 @@ The operation returns an HTTP status code:
 
 When running in stand-alone mode, there is nothing that invokes the health API automatically. You can invoke the API though from your application code or a health monitoring tool.
 
-When running in Kubernetes, the Dapr sidecar-injector automatically configures Kubernetes to use the health API for executing *liveness probes* and *readiness probes*. 
+When running in Kubernetes, the Dapr sidecar-injector automatically configures Kubernetes to use the health API for executing *liveness probes* and *readiness probes*.
 
-Kubernetes uses liveness probes to determine whether a container is up and running. If a liveness probe returns a failure code, Kubernetes will assume the container is dead and automatically restart it. This is one of the features of Kubernetes that increases the overall availability of your application. 
+Kubernetes uses liveness probes to determine whether a container is up and running. If a liveness probe returns a failure code, Kubernetes will assume the container is dead and automatically restart it. This is one of the features of Kubernetes that increases the overall availability of your application.
 
 Kubernetes uses readiness probes to determine whether a container is ready to start accepting traffic. A pod is considered ready when all the containers it contains are ready. One of the ways readiness probes are used in Kubernetes, is to determine whether a Kubernetes service can direct traffic to a pod in a load balancing scenario. Pods that are not ready are automatically removed from the load-balancer.
 
@@ -541,13 +541,13 @@ Dapr offers a dashboard out of the box that presents information about the Dapr 
 
 ## References
 
-[1]: https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview/	"Azure Application Insights"
-[2]: https://opentelemetry.io/	"Open Telemetry"
-[3]: https://zipkin.io/	"Zipkin"
-[4]: https://www.w3.org/TR/trace-context/	"W3C Trace Context"
-[5]: https://www.jaegertracing.io/	"Jaeger"
-[6]: https://newrelic.com/	"New Relic"
-[7]: https://prometheus.io/	"Prometheus"
-[8]: https://grafana.com/grafana/	"Grafana"
-[9]: https://opentelemetry.io/docs/net/	"Open Telemetry SDK for .NET"
+[1]: https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview/ "Azure Application Insights"
+[2]: https://opentelemetry.io/ "Open Telemetry"
+[3]: https://zipkin.io/ "Zipkin"
+[4]: https://www.w3.org/TR/trace-context/ "W3C Trace Context"
+[5]: https://www.jaegertracing.io/ "Jaeger"
+[6]: https://newrelic.com/ "New Relic"
+[7]: https://prometheus.io/ "Prometheus"
+[8]: https://grafana.com/grafana/ "Grafana"
+[9]: https://opentelemetry.io/docs/net/ "Open Telemetry SDK for .NET"
 [10]: <https://www.fluentd.org/> "Fluentd"
