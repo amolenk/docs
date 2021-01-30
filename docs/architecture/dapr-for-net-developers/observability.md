@@ -1,20 +1,25 @@
+---
 title: Dapr Observability
 description: A description of the observability features of Dapr and how to apply them
 author: edwinvw
 ms.date: 01/23/2020
+ms.reviewer: robvet
+---
 
 # Dapr observability
 
-When building a distributed system (say a microservices based solution), it is crucial to have a good idea of what's going on with the services while running in production. We often refer to this as **observability**. Having observability assures insight into the health of the application at all times. This is invaluable for effectively monitoring and troubleshooting the application. 
+When building a distributed system, you're concurrently managing independent microservices and backing services (databases, message brokers, key vaults) that compose together to form an application. With so many moving parts, system monitoring takes on a new meaning. Referred to as [observability](https://docs.microsoft.com/dotnet/architecture/cloud-native/observability-patterns). Having observability assures insight into the health of the application at all times. It's necessary for effectively monitoring and troubleshooting the application. 
 
-The information used to gain observability is often referred to as **telemetry** and can roughly be divided into the following four categories: 
+The information used to gain observability is referred to as **telemetry** and can be divided into the following four categories: 
 
-1. **Distributed tracing** gives insight into the traffic between the services and which services are involved in distributed transactions.
-1. **Metrics** give insight into the performance of a service and its resource consumption.
-1. **Logging** gives insight into how the code is being executed at runtime and whether any errors have occurred.
-1. **Health** status of the services gives insight into the availability of the services.
+1. **Distributed tracing** provides insight into the traffic between the services and which services are involved in distributed transactions.
+1. **Metrics** provides insight into the performance of a service and its resource consumption.
+1. **Logging** provides insight into how the code is being executed at runtime and whether any errors have occurred.
+1. **Health** status of the services provide insight into the availability of the services.
 
-Whether or not all telemetry categories are available depends on the observability features offered by the platform your application runs on. An example of a platform that offers all the categories is Microsoft Azure, for instance. Azure offers a service called **Application Insights** (or "App Insights"). This service is automatically enabled for most of the available Azure IaaS and PaaS services. When an application is built using these Azure services, telemetry is gathered automatically and sent to App Insights. This includes logging from the application code, exceptions that occurred in the code, metrics on the resource utilization of the services, duration and status-code of all requests sent to service and more. App Insights is even capable of automatically drawing a diagram with the dependencies between services based on their communication.
+The richness of telemetry depends on the observability features supported by platform upon which the application runs. The Azure cloud is a platform provides a rich telemetry experience and includes all of the above categories. 
+
+Whether all telemetry categories are available depends on the observability features supported by platform upon which the application runs. An example of a platform that offers all the categories is Microsoft Azure, for instance. Azure offers a service called **Application Insights** (or "App Insights"). This service is automatically enabled for most of the available Azure IaaS and PaaS services. When an application is built using these Azure services, telemetry is gathered automatically and sent to App Insights. This includes logging from the application code, exceptions that occurred in the code, metrics on the resource utilization of the services, duration and status-code of all requests sent to service and more. App Insights is even capable of automatically drawing a diagram with the dependencies between services based on their communication.
 
 Let's look at what Dapr can offer when it comes to observability.
 
