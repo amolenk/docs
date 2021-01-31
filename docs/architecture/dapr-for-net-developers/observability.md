@@ -8,26 +8,26 @@ ms.reviewer: robvet
 
 # Dapr observability
 
-Modern distributed systems are complex. Small, loosely coupled, independently deployable services coupled with backing services (databases, message brokers, key vaults) compose together to form an application. With so many separate moving parts, monolithic monitoring approaches aren't enough. Instead the system must be observable. [Observability](https://docs.microsoft.com/dotnet/architecture/cloud-native/observability-patterns) assures insight into the health of the application at all times. It enables the internal state to be inferred by observing its output. Observability is necessary for effectively monitoring and troubleshooting the application. 
+Modern distributed systems are complex. You start with small, loosely coupled, independently deployable services. These services cross process and server boundaries. They then consume different kinds of infrastructure backing services (databases, message brokers, key vaults). Finally, these disparate pieces compose together to form an application. 
 
-The information used to gain observability is referred to as **telemetry**. It can be divided into four broad categories: 
+With so many separate, moving parts, how do you make sense of what is going on? Unfortunately, legacy monitoring approaches from the past aren't enough. Instead, the system must be **observable** from end-to-end. Modern [observability](https://docs.microsoft.com/dotnet/architecture/cloud-native/observability-patterns) practices provide visibility and insight into the health of the application at all times. They enable you to infer the internal state by observing the output. Observability is mandatory for monitoring and troubleshooting distributed applications. 
+
+The system information used to gain observability is referred to as **telemetry**. It can be divided into four broad pillars: 
 
 1. **Distributed tracing** provides insight into the traffic between services and services involved in distributed transactions.
 1. **Metrics** provides insight into the performance of a service and its resource consumption.
 1. **Logging** provides insight into how the code is executing and if errors have occurred.
 1. **Health** endpoints provide insight into the availability of a service.
 
-The depth of telemetry depends on the observability features supported by the application platform. The Azure cloud platform provides a rich telemetry experience supporting all of the telemetry categories. It features a service called [Application Insights](https://docs.microsoft.com/azure/azure-monitor/app/app-insights-overview) which is automatically enabled for Azure IaaS and PaaS services. When an application is built with Azure services, telemetry is automatically gathered and published to Application Insights. Included is application logging, exceptions, utilization metrics, and the duration of all requests. It can even render a diagram showing the dependencies between services based on their communication.
+The depth of telemetry is determined by the observability features of an application platform. Consider the Azure cloud. It provides a rich telemetry experience that includes all of the telemetry pillars. Without any configuration, most Azure IaaS and PaaS services propagate and publish telemetry to the [Azure Application Insights](https://docs.microsoft.com/azure/azure-monitor/app/app-insights-overview) service. Application Insights presents system logging, tracing, and problem areas with highly visual dashboards. It can even render a diagram showing the dependencies between services based on their communication. 
 
-For an application consuming Azure resources, Azure Application Insights automatically captures feature-rich observability - out-of-the-box. But what if an application can't use Azure resources? Is it still possible to take advantage of the rich telemetry experience of Application Insights?
+However, what if an application can't use Azure PaaS and IaaS resources? Is it still possible to take advantage of the rich telemetry experience of Application Insights? The answer is yes. A non-Azure application can import libraries, add configuration, and instrument code to emit telemetry to Azure Application Insights. However, this approach **tightly couples** the application to Application Insights. Moving the app to a different monitoring platform could involve expensive refactoring. Wouldn't it be great to avoid tight coupling and consume observability outside of the code?
 
-The answer is yes. A non-Azure application can import libraries, add configuration and instrumentation code to emit telemetry to Azure Application Insights. However, this approach **tightly couples** the application to Application Insights. Moving the app to a different monitoring platform would involve expensive refactoring. Wouldn't it be great to avoid tight coupling and consume observability outside of the code? Dapr can make that happen.
-
-Let's look at how Dapr add observability to our distributed applications.
+With Dapr, the answer is yes. Let's look at how Dapr can add observability to our distributed applications.
 
 ## What it solves
 
-The Dapr Observability Building Block decouples observability from the application. It automatically captures traffic generated by Dapr sidecars and Dapr system services. The block correlates traffic from a single operation that spans multiple services. It also exposes performance metrics, resource utilization, and the health status of the system. Telemetry is published in open-standard formats enabling information to be fed into your monitoring backend of choice. There, the information can be visualized, queried, and analyzed.
+The Dapr Observability Building Block decouples observability from the application. It automatically captures traffic generated by Dapr sidecars and Dapr system services. The block correlates traffic from a single operation that spans multiple services. It also exposes performance metrics, resource utilization, and the health of the system. Telemetry is published in open-standard formats enabling information to be fed into your monitoring backend of choice. There, the information can be visualized, queried, and analyzed.
 
 As Dapr abstracts away the plumbing, the application is unaware of how observability is implemented. There's no need to reference libraries or implement custom instrumentation code. Dapr allows the developer to focus on building business logic and not observability plumbing. Observability is configured at the Dapr level and is consistent across services, even when created by different teams, and written in different programming platforms.
 
@@ -37,19 +37,19 @@ Let's dive in and see how observability works in Dapr.
 
 Dapr's [sidecar architecture](dapr-at-20000-feet.md#sidecar-architecture) enables built-in observability features. As services communicate, Dapr sidecars intercept the traffic and extract tracing, metrics, and logging information. Telemetry is published in an open standards format. By default, Dapr supports [OpenTelemetry](https://opentelemetry.io/) and [Zipkin](https://zipkin.io/). 
 
-Dapr provides [collectors](https://docs.dapr.io/operations/monitoring/open-telemetry-collector/) that can publish telemetry to different backend monitoring tools. These tools present Dapr telemetry for analysis and querying. Figure 9-1 shows an overview of the Dapr observability architecture:
+Dapr provides [collectors](https://docs.dapr.io/operations/monitoring/open-telemetry-collector/) that can publish telemetry to different backend monitoring tools. These tools present Dapr telemetry for analysis and querying. Figure 9-1 shows the Dapr observability architecture:
 
-![Overview of the Dapr observability architecture](media/observability/observability-architecture.png)
+![Dapr observability architecture](media/observability/observability-architecture.png)
 
-**Figure 9-1**: Overview of the Dapr observability architecture
+**Figure 9-1**: Dapr observability architecture
 
 1. Service A calls an operation on Service B. The call is routed from a Dapr sidecar for Service A to a sidecar for Service B.
 1. When Service B completes the operation, a response is sent back to Service A through the Dapr sidecars. They gather and publish all available telemetry for every request and response.
 1. The configured collector ingests the telemetry and sends it to the monitoring backend.  
 
-Adding observability is different from the other Dapr building blocks, like pub/sub or state management. Instead of a building block, a collector and the monitoring backend are configured. As shown above in Figure 9-1, it's possible to configure multiple collectors that integrate with different monitoring backends.
+As a developer, keep in mind that adding observability is different from configuring other Dapr building blocks, like pub/sub or state management. Instead of referencing a building block, you add a collector and a monitoring backend. Figure 9-1 shows it's possible to configure multiple collectors that integrate with different monitoring backends.
 
-At the beginning of this chapter, four broad categories of telemetry were identified. The following sections will provide detail for each category. They'll include instruction on how to configure collectors that integrate with popular monitoring backends.
+At the beginning of this chapter, four pillars of telemetry were identified. The following sections will provide detail for each category. They'll include instruction on how to configure collectors that integrate with popular monitoring backends.
 
 
 
@@ -67,9 +67,9 @@ At the beginning of this chapter, four broad categories of telemetry were identi
 
 ### Distributed tracing
 
-Distributed tracing provides insight into the traffic that flows across services in a distributed application. The log of exchanged request and response messages is an invaluable source of information for troubleshooting issues. The hard part is correlating messages that originate from the same event. To correlate messages, Dapr uses the [W3C Trace Context](https://www.w3.org/TR/trace-context) standard.  
+Distributed tracing provides insight into the traffic that flows across services in a distributed application. The log of exchanged request and response messages is an invaluable source of information for troubleshooting issues. The hard part is *correlating messages* that originate from the same operation. 
 
-The W3C Trace Context is a specification that injects context information into requests and responses for correlation. Figure 9-2 shows how correlation works:
+Dapr uses the [W3C Trace Context](https://www.w3.org/TR/trace-context) for correlate related messages. It injects the same context information into requests and responses that form a unique operation. Figure 9-2 shows how correlation works:
 
 ![W3C Trace Context example](media/observability/w3c-trace-context.png)
 
@@ -79,8 +79,6 @@ The W3C Trace Context is a specification that injects context information into r
 1. Service B receives the request and invokes an operation on Service C. Dapr detects that the incoming request contains a trace context and propagates it by injecting it into the outgoing request to Service C.  
 1. Service C receives the request and handles it. Dapr detects that the incoming request contains a trace context and propagates it by injecting it into the outgoing response back to Service B.
 1. Service B receives the response and handles it. It then creates a new response and propagates the trace context by injecting it into the outgoing response back to Service A.
-
-Dapr emits telemetry that contains the trace context information. With this information, it's easy to correlate requests and responses that are part of a distributed transaction across multiple services.
 
 A set of requests and responses that belong together is called a *trace*. Figure 9-3 shows a trace:
 
@@ -94,11 +92,11 @@ The next sections discuss how to inspect tracing telemetry by publishing it to a
 
 #### Using Zipkin as monitoring backend
 
-[Zipkin](https://zipkin.io/) is an open-source distributed tracing system. It can ingest and visualize telemetry data. Dapr offers default support for Zipkin. The next example demonstrates how to configure Zipkin to visualize Dapr telemetry.
+[Zipkin](https://zipkin.io/) is an open-source distributed tracing system. It can ingest and visualize telemetry data. Dapr offers default support for Zipkin. The following example demonstrates how to configure Zipkin to visualize Dapr telemetry.
 
 ##### Enable and configure tracing
 
-First, tracing must be enabled for the Dapr runtime using a Dapr configuration file. Here's an example of a configuration file named `tracing-config.yaml`:  
+To start, tracing must be enabled for the Dapr runtime using a Dapr configuration file. Here's an example of a configuration file named `tracing-config.yaml`:  
 
 ```yaml
 apiVersion: dapr.io/v1alpha1
@@ -113,7 +111,7 @@ spec:
       endpointAddress: "http://zipkin.default.svc.cluster.local:9411/api/v2/spans"
 ```
 
-The `samplingRate` specifies the interval used for publishing traces. The value must be between `0` (tracing disabled) and `1` (every trace is published). With a value of `0.5`, for example, every other trace is published, significantly reducing the amount of publishing traffic. The `endpointAddress` points to an endpoint on a Zipkin server running in a Kubernetes cluster. The default port for Zipkin is `9411`.
+The `samplingRate`attribute specifies the interval used for publishing traces. The value must be between `0` (tracing disabled) and `1` (every trace is published). With a value of `0.5`, for example, every other trace is published, significantly reducing publishing traffic. The `endpointAddress` points to an endpoint on a Zipkin server running in a Kubernetes cluster. The default port for Zipkin is `9411`.
 
 > [!NOTE]
 > When installing Dapr in standalone mode, a Zipkin server is automatically installed and tracing is enabled in the default configuration file located in `$HOME/.dapr/config.yaml` or `%USERPROFILE%\.dapr\config.yaml` on Windows).
@@ -126,7 +124,7 @@ kubectl apply -f tracing-config.yaml
 
 ##### Install the Zipkin server
 
-When installing Dapr on a Kubernetes cluster, a Zipkin isn't added by default. The following Kubernetes manifest file named `zipkin.yaml`, deploys a standard Zipkin server to the cluster:
+When installing Dapr on a Kubernetes cluster, Zipkin isn't added by default. The following Kubernetes manifest file named `zipkin.yaml`, deploys a standard Zipkin server to the cluster:
 
 ```yaml
 kind: Deployment
@@ -185,7 +183,7 @@ kubectl apply -f zipkin.yaml
 
 ##### Configure the services to use the tracing configuration
 
-Now everything is set up correctly to start publishing telemetry. Every Dapr sidecar that is deployed as part of the application must be instructed to start emitting telemetry when started. To do that, add a `dapr.io/config` annotation that references the `tracing-config` configuration to the deployment of each service. Here's an example of the eShop Ordering API service's manifest file containing the annotation:
+Now everything is set up correctly to start publishing telemetry. Every Dapr sidecar that is deployed as part of the application must be instructed to emit telemetry when started. To do that, add a `dapr.io/config` annotation that references the `tracing-config` configuration to the deployment of each service. Here's an example of the eShop Ordering API service's manifest file containing the annotation:
 
 ```yaml
 apiVersion: apps/v1
@@ -342,7 +340,7 @@ The Dapr documentation includes a [tutorial for installing Prometheus and Grafan
 
 ### Logging
 
-Logging provides insight into what is happening with a service at runtime. When running an application, Dapr automatically emits log entries from Dapr sidecars and Dapr system services. However, logging entries instrumented in your application code **aren't** automatically included. To emit logging from application code, you can import a specific SDK like like [OpenTelemetry SDK for .NET](https://opentelemetry.io/docs/net/). Logging application code is covered later in this chapter in the section *Using the Dapr .NET SDK*.  
+Logging provides insight into what is happening with a service at runtime. When running an application, Dapr automatically emits log entries from Dapr sidecars and Dapr system services. However, logging entries instrumented in your application code **aren't** automatically included. To emit logging from application code, you can import a specific SDK like [OpenTelemetry SDK for .NET](https://opentelemetry.io/docs/net/). Logging application code is covered later in this chapter in the section *Using the Dapr .NET SDK*.  
 
 #### Log entry structure
 
@@ -526,7 +524,7 @@ Check out the [Dapr dashboard CLI command reference](https://docs.dapr.io/refere
 
 The Dapr .NET SDK doesn't contain any specific observability features. All observability features are offered at the Dapr level.
 
-If you want to emit telemetry from your .NET application code, you should consider the [OpenTelemetry SDK for .NET](https://opentelemetry.io/docs/net/). The Open Telemetry project is cross-platform, open-source, and vendor agnostic. It provides an end-to-end implementation to generate, emit, collect, process, and export telemetry data. There's a single instrumentation library per language with support for both automatic and manual instrumentation. Telemetry is published using the Open Telemetry standard. The project has broad industry support and adoption from cloud providers, vendors, and end users.
+If you want to emit telemetry from your .NET application code, you should consider the [OpenTelemetry SDK for .NET](https://opentelemetry.io/docs/net/). The Open Telemetry project is cross-platform, open-source, and vendor agnostic. It provides an end-to-end implementation to generate, emit, collect, process, and export telemetry data. There's a single instrumentation library per language that supports automatic and manual instrumentation. Telemetry is published using the Open Telemetry standard. The project has broad industry support and adoption from cloud providers, vendors, and end users.
 
 You'll also need to include an SDK for the monitoring tool of choice for your application. 
 
@@ -562,7 +560,7 @@ Dapr only produces telemetry for the Dapr system services and sidecars. Telemetr
 
 Dapr telemetry is produced in an open-standards based format so it can be ingested by a large set of available monitoring tools. Some examples are: Zipkin, Azure Application Insights, the ELK Stack, New Relic, and Grafana.
 
-You'll need to deploy a telemetry collector or scraper with your Dapr application that picks up the telemetry and forwards it to the monitoring backend.
+You'll need a telemetry scraper that ingests telemetry and publishes it to the monitoring backend.
 
 Dapr can be configured to emit structured logging. Structured logging is favored as it can be indexed by backend monitoring tools. Indexed logging enables users to execute rich queries when searching through the logging.
 
