@@ -8,18 +8,18 @@ ms.reviewer: robvet
 
 # Dapr observability
 
-Modern distributed systems are complex. You start with small, loosely coupled, independently deployable services. These services cross process and server boundaries. They then consume different kinds of infrastructure backing services (databases, message brokers, key vaults). Finally, these disparate pieces compose together to form an application. 
+Modern distributed systems are complex. You start with small, loosely coupled, independently deployable services. These services cross process and server boundaries. They then consume different kinds of infrastructure backing services (databases, message brokers, key vaults). Finally, these disparate pieces compose together to form an application.
 
-With so many separate, moving parts, how do you make sense of what is going on? Unfortunately, legacy monitoring approaches from the past aren't enough. Instead, the system must be **observable** from end-to-end. Modern [observability](https://docs.microsoft.com/dotnet/architecture/cloud-native/observability-patterns) practices provide visibility and insight into the health of the application at all times. They enable you to infer the internal state by observing the output. Observability is mandatory for monitoring and troubleshooting distributed applications. 
+With so many separate, moving parts, how do you make sense of what is going on? Unfortunately, legacy monitoring approaches from the past aren't enough. Instead, the system must be **observable** from end-to-end. Modern [observability](https://docs.microsoft.com/dotnet/architecture/cloud-native/observability-patterns) practices provide visibility and insight into the health of the application at all times. They enable you to infer the internal state by observing the output. Observability is mandatory for monitoring and troubleshooting distributed applications.
 
-The system information used to gain observability is referred to as **telemetry**. It can be divided into four broad pillars: 
+The system information used to gain observability is referred to as **telemetry**. It can be divided into four broad pillars:
 
 1. **Distributed tracing** provides insight into the traffic between services and services involved in distributed transactions.
 1. **Metrics** provides insight into the performance of a service and its resource consumption.
 1. **Logging** provides insight into how the code is executing and if errors have occurred.
 1. **Health** endpoints provide insight into the availability of a service.
 
-The depth of telemetry is determined by the observability features of an application platform. Consider the Azure cloud. It provides a rich telemetry experience that includes all of the telemetry pillars. Without any configuration, most Azure IaaS and PaaS services propagate and publish telemetry to the [Azure Application Insights](https://docs.microsoft.com/azure/azure-monitor/app/app-insights-overview) service. Application Insights presents system logging, tracing, and problem areas with highly visual dashboards. It can even render a diagram showing the dependencies between services based on their communication. 
+The depth of telemetry is determined by the observability features of an application platform. Consider the Azure cloud. It provides a rich telemetry experience that includes all of the telemetry pillars. Without any configuration, most Azure IaaS and PaaS services propagate and publish telemetry to the [Azure Application Insights](https://docs.microsoft.com/azure/azure-monitor/app/app-insights-overview) service. Application Insights presents system logging, tracing, and problem areas with highly visual dashboards. It can even render a diagram showing the dependencies between services based on their communication.
 
 However, what if an application can't use Azure PaaS and IaaS resources? Is it still possible to take advantage of the rich telemetry experience of Application Insights? The answer is yes. A non-Azure application can import libraries, add configuration, and instrument code to emit telemetry to Azure Application Insights. However, this approach **tightly couples** the application to Application Insights. Moving the app to a different monitoring platform could involve expensive refactoring. Wouldn't it be great to avoid tight coupling and consume observability outside of the code?
 
@@ -35,7 +35,7 @@ Let's dive in and see how observability works in Dapr.
 
 ## How it works
 
-Dapr's [sidecar architecture](dapr-at-20000-feet.md#sidecar-architecture) enables built-in observability features. As services communicate, Dapr sidecars intercept the traffic and extract tracing, metrics, and logging information. Telemetry is published in an open standards format. By default, Dapr supports [OpenTelemetry](https://opentelemetry.io/) and [Zipkin](https://zipkin.io/). 
+Dapr's [sidecar architecture](dapr-at-20000-feet.md#sidecar-architecture) enables built-in observability features. As services communicate, Dapr sidecars intercept the traffic and extract tracing, metrics, and logging information. Telemetry is published in an open standards format. By default, Dapr supports [OpenTelemetry](https://opentelemetry.io/) and [Zipkin](https://zipkin.io/).
 
 Dapr provides [collectors](https://docs.dapr.io/operations/monitoring/open-telemetry-collector/) that can publish telemetry to different backend monitoring tools. These tools present Dapr telemetry for analysis and querying. Figure 9-1 shows the Dapr observability architecture:
 
@@ -67,7 +67,7 @@ At the beginning of this chapter, four pillars of telemetry were identified. The
 
 ### Distributed tracing
 
-Distributed tracing provides insight into the traffic that flows across services in a distributed application. The log of exchanged request and response messages is an invaluable source of information for troubleshooting issues. The hard part is *correlating messages* that originate from the same operation. 
+Distributed tracing provides insight into the traffic that flows across services in a distributed application. The log of exchanged request and response messages is an invaluable source of information for troubleshooting issues. The hard part is *correlating messages* that originate from the same operation.
 
 Dapr uses the [W3C Trace Context](https://www.w3.org/TR/trace-context) for correlate related messages. It injects the same context information into requests and responses that form a unique operation. Figure 9-2 shows how correlation works:
 
@@ -526,7 +526,7 @@ The Dapr .NET SDK doesn't contain any specific observability features. All obser
 
 If you want to emit telemetry from your .NET application code, you should consider the [OpenTelemetry SDK for .NET](https://opentelemetry.io/docs/net/). The Open Telemetry project is cross-platform, open-source, and vendor agnostic. It provides an end-to-end implementation to generate, emit, collect, process, and export telemetry data. There's a single instrumentation library per language that supports automatic and manual instrumentation. Telemetry is published using the Open Telemetry standard. The project has broad industry support and adoption from cloud providers, vendors, and end users.
 
-You'll also need to include an SDK for the monitoring tool of choice for your application. 
+You'll also need to include an SDK for the monitoring tool of choice for your application.
 
 ## Reference architecture: eShopOnDapr
 
