@@ -51,20 +51,6 @@ As a developer, keep in mind that adding observability is different from configu
 
 At the beginning of this chapter, four pillars of telemetry were identified. The following sections will provide detail for each category. They'll include instruction on how to configure collectors that integrate with popular monitoring backends.
 
-
-
-
-*****************************************************************************************************************
-******** Confused here: We don't discuss Kubernetes in the Getting Started chapter. Think we adjust accordingly
-> [!IMPORTANT]
-> Because observability is critical when running in production, the examples will focus on production scenarios and assume the example application is running in Kubernetes with Dapr is installed on the cluster (see [Chapter 2- Getting started](ch3-getting-started.md) for instructions).
-
-********
-*****************************************************************************************************************
-
-
-
-
 ### Distributed tracing
 
 Distributed tracing provides insight into the traffic that flows across services in a distributed application. The log of exchanged request and response messages is an invaluable source of information for troubleshooting issues. The hard part is *correlating messages* that originate from the same operation.
