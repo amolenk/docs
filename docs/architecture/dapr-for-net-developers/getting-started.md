@@ -81,9 +81,9 @@ You can invoke Dapr APIs across any development platform using Dapr's native sup
        {
            static async Task Main(string[] args)
            {
-               DaprClient daprClient = new DaprClientBuilder().Build();
+               var daprClient = new DaprClientBuilder().Build();
    
-               int counter = await daprClient.GetStateAsync<int>("statestore", "counter");
+               var counter = await daprClient.GetStateAsync<int>("statestore", "counter");
    
                while (true)
                {
@@ -172,6 +172,9 @@ spec:
   - name: actorStateStore
     value: "true"
 ```
+
+> [!IMPORTANT]
+> A namespaced component is only accessible to applications running in the same namespace. If your Dapr application fails to load a component, make sure that the application namespace matches the component namespace. This can be especially tricky in self-hosted mode where the application namespace is stored in a `NAMESPACE` environment variable.
 
 If needed, you could further restrict a component to a particular application. Within the `production` namespace, you may want to limit access of the Redis cache to only the `DaprCounter` application. You do so by specifying `scopes` in the component configuration. The following example shows how to restrict access to the Redis `statestore` component to the application `DaprCounter` in the `production` namespace:
 
