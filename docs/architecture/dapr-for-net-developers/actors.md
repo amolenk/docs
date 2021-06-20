@@ -7,30 +7,30 @@ ms.date: 05/30/2021
 
 # The Dapr actors building block
 
-The actor model originated in 1973. It was proposed by Carl Hewitt as a conceptual model of concurrent computation, a form of computing in which several computations are executed at the same time. Highly parallel computers weren't yet available at that time, but the more recent advancements of multi-core CPUs and distributed systems have made the actor model popular.
+The [actor model](https://docs.dapr.io/developing-applications/building-blocks/actors/actors-overview/) originated in 1973. [Carl Hewitt](https://en.wikipedia.org/wiki/Carl_Hewitt) proposed a conceptual model for concurrent computation, a form of computing in which several computations are executed at the same time. Highly parallel computers weren't yet available at that time, but the more recent advancements of multi-core CPUs and distributed systems have made the actor model popular.
 
-In the actor model, the *actor* is an independent unit of compute and state. Actors are completely isolated from each other and they will never share memory. Actors communicate with each other using messages. When an actor receives a message, it can change its internal state, and send messages to other (possibly new) actors.
+In the actor model, the *actor* is an independent unit of compute and state. Actors are isolated from each other and they'll never share memory. They communicate with each other using messages. When an actor receives a message, it can change its internal state, and send messages to other (possibly new) actors.
 
-The reason why the actor model makes writing concurrent systems easier is that it provides a turn-based (or single-threaded) access model. Multiple actors can run at the same time, but each actor will process received messages one at a time. This means that you can be sure that at most one thread is active inside an actor at any time. That makes writing correct concurrent and parallel systems much easier.
+The reason why the actor model makes writing concurrent systems easier is that it provides a [turn-based (or single-threaded) access model](https://docs.dapr.io/developing-applications/building-blocks/actors/actors-overview/#turn-based-access). Multiple actors can run at the same time, but each actor will process received messages one at a time. At most, only one thread is active inside an actor at any time. The model reduces the complexity when writing concurrent and parallel operations.
 
 ## What it solves
 
-Actor model implementations are usually tied to a specific language or platform. With the Dapr actors building block however, you can leverage the actor model from any language or platform.
+Actor model implementations are coupled to a specific language or platform. However, the Dapr actors building block can implement the actor model in any supported language or platform.
 
-Dapr's implementation is based on the [virtual actor pattern introduced by Project "Orleans"](https://www.microsoft.com/research/project/orleans-virtual-actors/). With the virtual actor pattern, you don't need to explicitly create actors. Actors are activated implicitly and placed on a node in the cluster the first time a message is sent to the actor. When not executing operations, actors are silently unloaded from memory. If a node fails, Dapr automatically moves activated actors to healthy nodes. Besides sending messages between actors, the Dapr actor model also support scheduling future work using timers and reminders.
+Dapr's implementation is based on the [virtual actor pattern introduced by Project "Orleans"](https://www.microsoft.com/research/project/orleans-virtual-actors/). With the virtual actors, you don't explicitly instantiate the actor. Instead, the actor is implicitly activated and placed on a cluster node the first time a message is sent to it. When not executing operations, the actor is silently unloaded from memory. If a node fails, Dapr automatically moves the activated actor to a healthy node. The Dapr actor model also supports scheduling future work using timers and reminders.
 
-While the actor model can provide great benefits, it's important to carefully consider the actor design. For example, having many clients call the same actor will result in poor performance because the actor operations execute serially. Here are some criteria to check if a scenario is a good fit for Dapr actors:
+While the actor model can provide many benefits, it's important to carefully consider the use case for an actor. For example, having many clients call the same actor will result in poor performance because the actor executes operations serially, or one at a time. Consider the following criteria when determining whether a scenario is a good fit for Dapr actors:
 
 - Your problem space involves concurrency. Without actors, you'd have to introduce explicit locking mechanisms in your code.
 - Your problem space can be partitioned into small, independent, and isolated units of state and logic.
-- You don't need low-latency reads of the actor state. Low-latency reads cannot be guaranteed because actor operations execute serially.
-- You don't need to query state across a set of actors. Querying across actors is inefficient because each actor's state needs to be read individually and can introduce unpredictable latencies.
+- You don't require low-latency reads of the actor state. Low-latency reads cannot be guaranteed because actor operations execute serially.
+- You don't need to query state across a set of actors. Querying across actors is inefficient because each actor's state needs to be read individually. Doing so can introduce unpredictable latencies.
 
-One design pattern that fits these criteria quite well is the [orchestration-based saga](/azure/architecture/reference-architectures/saga/saga) or *process manager* design pattern. A saga manages a sequence of steps that must be taken to reach some outcome. The saga (or process manager) maintains the current state of the sequence and triggers the next step. If a step fails, the saga can execute compensating actions. Actors make it easy to deal with concurrency in the saga and to keep track of the current state. The [eShopOnDapr reference application](reference-application.md) uses the saga pattern and Dapr actors to implement the Ordering process.
+One design pattern that fits these criteria well is the [orchestration-based saga](/azure/architecture/reference-architectures/saga/saga) or *process manager* design pattern. A saga manages a sequence of steps that must be taken to reach an outcome. The saga (or process manager) maintains the current state of the sequence and triggers the next step. If a step fails, the saga can execute compensating actions to return to the original state. Actors simplify concurrency and keeping track of the current state in the saga. The [eShopOnDapr reference application](reference-application.md) uses the saga pattern and Dapr actors to implement the Ordering process.
 
 ## How it works
 
-The Dapr sidecar provides the HTTP/gRPC API to invoke actors. This is the base URL of the HTTP API:
+The Dapr sidecar provides the HTTP/gRPC API to invoke actors. Here's the native Dapr HTTP API base URL for Dapr actors:
 
 ```http
 http://localhost:<daprPort>/v1.0/actors/<actorType>/<actorId>/
@@ -40,9 +40,9 @@ http://localhost:<daprPort>/v1.0/actors/<actorType>/<actorId>/
 - `<actorType>`: the actor type.
 - `<actorId>`: the ID of the specific actor to call.
 
-The sidecar manages how, when and where each actor runs, and also routes messages between actors. When an actor hasn't been used for a period of time, the runtime deactivates the actor and removes it from memory. Any state managed by the actor is persisted and will be available when the actor re-activates. Dapr uses an idle timer to determine when an actor can be deactivated. When an operation is called on the actor (either by a method call or a reminder firing), the idle timer is reset and the actor instance will remain activated.
+The sidecar manages how, when, and where each actor will run and also routes messages between them. When an actor hasn't been called for a period of time, the runtime will deactivate the actor and remove it from memory. Any state held by the actor will be persisted and available when the actor reactivates. Dapr uses an idle timer to determine when an actor can be deactivated. When an operation is called on the actor (either by a method call or a reminder firing), the idle timer is reset and the actor instance will remain activated.
 
-The sidecar API is only one part of the equation. The service itself also needs to implement an API specification, because the actual code that you write for the actor will run inside the service itself. Figure 11-1 shows the various API calls between the service and its sidecar:
+The sidecar API is only part of the equation. The service itself needs to implement an API specification. The actual code that you write for the actor will run inside the service. Figure 11-1 shows the various API calls between the service and its sidecar:
 
 :::image type="content" source="./media/actors/sidecar-communication.png" alt-text="Diagram of API calls between actor service and Dapr sidecar.":::
 
@@ -54,14 +54,14 @@ To provide scalability and reliability, actors are partitioned across all the in
 
 **Figure 11-2**. Actor placement service.
 
-1. On startup, the sidecar makes a call to the actor service to get the registered actor types as well as actor configuration settings.
+1. On startup, the sidecar makes a call to the actor service to get the registered actor types and actor configuration settings.
 2. The sidecar sends the list of registered actor types to the placement service.
 3. The placement service broadcasts the updated partitioning information to all actor service instances. Each instance will keep a cached copy of the partitioning information and use it to invoke actors.
 
 > [!IMPORTANT]
-> Because actors are randomly distributed across service instances, it should be expected that an actor operation always requires a call to a different node in the network.
+> Because actors are randomly distributed across service instances, expect an actor operation to  require a call to a different node in the cluster.
 
-The next figure shows an ordering service instance running in Pod 1 call the `ship` method of an `OrderActor` instance with ID `3`. Because the actor with ID `3` is placed in a different instance, this results in a call to a different node in the cluster:
+The next figure shows an ordering service instance running in Pod 1 call the `ship` method of an `OrderActor` instance with ID `3`. Because the actor with ID `3` is placed in a different service instance, a call must be made to a different node in the cluster:
 
 :::image type="content" source="./media/actors/invoke-actor-method.png" alt-text="Diagram of calling an actor method.":::
 
@@ -73,7 +73,7 @@ The next figure shows an ordering service instance running in Pod 1 call the `sh
 
 ### Turn-based access model
 
-The turn-based access model ensures that at any time there's at most one thread active inside an actor instance. To understand why this is useful, consider the following example of a method that increments a counter value:
+The turn-based access model ensures that at any given moment there's at most one thread active inside an actor instance. To understand the significance, consider the following example of a method that increments a counter value:
 
 ```csharp
 public int Increment()
@@ -87,7 +87,7 @@ public int Increment()
 }
 ```
 
-Let's assume that the current value returned by the `GetValue` method is `1`. When two threads call the `Increment` method at the same time, there's a risk of both of them calling the `GetValue` method before one of them calls `SaveValue`. This results in both threads starting with the same inital value (`1`). The threads then increment the value to `2` and return it to the caller. The resulting value after the two calls is now `2` instead of `3` which it should be. This is a simple example to illustrate the kind of issues that can slip into your code when working with multiple threads, and is easy to solve. In real world applications however, concurrent and parallel scenarios can become very complex.
+Let's assume that the current value returned by the `GetValue` method is `1`. When two threads call the `Increment` method at the same time, there's a risk of both of them calling the `GetValue` method before one of them calls `SaveValue`. If so, both threads start with the same initial value (`1`). Both threads then increment the value to `2` and return it to the caller. The resulting value after the two calls is now `2` instead of `3`, which it should be. Although simple, the example illustrates the types of issues that can slip into your code when working with multiple threads. In real world applications, concurrent and parallel scenarios can become complex.
 
 In traditional programming models, you can solve this problem by introducing locking mechanisms. For example:
 
@@ -108,9 +108,9 @@ public int Increment()
 }
 ```
 
-Unfortunately, using explicit locking mechanisms is error-prone. They can easily lead to deadlocks and can have serious impact on performance.
+Unfortunately, using explicit locking mechanisms is problematic. They can easily lead to deadlocks and significantly impact system performance.
 
-Thanks to the turn-based access model, you don't need to worry about multiple threads with actors, making it much easier to concurrent systems. The following actor example closely mirrors the code from the previous sample, but doesn't require any locking mechanisms to be correct:
+Thanks to the turn-based access model and actors, you don't need to worry about multiple threads. The following actor example closely mirrors the code from the previous sample, but doesn't require any locking mechanisms to manage concurrency:
 
 ```csharp
 public async Task<int> IncrementAsync()
@@ -128,12 +128,12 @@ public async Task<int> IncrementAsync()
 
 ### Timers and reminders
 
-Actors can use timers and reminders to schedule calls to themselves. Both concepts support the configuration of a due time. The difference lies in the lifetime of the callback registrations:
+Actors can use timers and reminders to schedule calls to themselves. Both concepts support the configuration of a *due time* (when the timer will fire). The difference lies in the lifetime of the callback registrations:
 
-- Timers will only stay active as long as the the actor is activated. Timers *will not* reset the idle-timer, so they cannot keep an actor active on their own.
-- Reminders outlive actor activations. If an actor is deactivated, a reminder will re-activate the actor. Reminders *will* reset the idle-timer.
+- Timers will only stay active as long as the actor is activated. Timers *won't* reset the idle-timer, so they can't keep an actor active on their own.
+- Reminders outlive actor activations. If an actor is deactivated, a reminder will reactivate the actor. Reminders *will* reset the idle-timer.
 
-Timers are registered by making a call to the actor API. In the following example, a timer is registered with a due time of 0 and a period of 10 seconds.
+Timers are registered by making a call to the actor API. The following example registers a timer with a due time of 0 and a period of 10 seconds.
 
 ```bash
 curl -X POST http://localhost:3500/v1.0/actors/<actorType>/<actorId>/timers/<name> \
@@ -160,11 +160,11 @@ curl -X POST http://localhost:3500/v1.0/actors/<actorType>/<actorId>/reminders/<
 This reminder will fire in 5 minutes. Because the given period is empty, this will be a one-time reminder.
 
 > [!NOTE]
-> Timers and reminders both respect the turn-based access model. When a timer or reminder fires, the callback will not be executed until any other method invocation or timer/reminder callback has finished.
+> Timers and reminders both respect the turn-based access model. When a timer or reminder fires, the callback will not be executed until any previous method invocations or timer/reminder callbacks have finished.
 
 ### State persistence
 
-Actor state is persisted using the Dapr [state management building block](state-management.md). Because actors can execute multiple state operations in a single turn, the state store component must support multi-item transactions. At the time of writing, the following state stores support multi-item transactions:
+Actor state is persisted using the Dapr [state management building block](state-management.md). Because actors can execute multiple state operations in a single turn, the state store component must support multi-item (multiple operations grouped together) transactions. At the time of writing, the following state stores support multi-item transactions:
 
 - Azure CosmosDB
 - MongoDB
@@ -179,7 +179,7 @@ To configure a state store component for use with actors, you need to append the
   value: "true"
 ```
 
-Here's a complete example for a Redis state store:
+Here's a complete example for a Redis state store component:
 
 ```yaml
 apiVersion: dapr.io/v1alpha1
@@ -200,7 +200,7 @@ spec:
 
 ## Use the Dapr .NET SDK
 
-You can create an actor model implementation using only HTTP/gRPC calls. However, it's much more convenient to use the language specific Dapr SDKs. At the time of writing, both the .NET and Java SDKs provide extensive support for working with actors.
+You can create an actor model implementation using the native Dapr HTTP/gRPC libraries. However, it's much more convenient to use the language-specific Dapr SDKs. At the time of writing, both the .NET and Java SDKs provide extensive support for working with actors.
 
 To get started with the .NET Dapr actors SDK, you add a package reference to `Dapr.Actors` to your service project. The first step of creating an actual actor is to define an interface that derives from `IActor`. Clients use the interface to invoke operations on the actor. Here's a simple example of an actor interface for keeping scores:
 
@@ -216,7 +216,7 @@ public interface IScoreActor : IActor
 > [!IMPORTANT]
 > The return type of an actor method must be `Task` or `Task<T>`. Also, actor methods can have at most one argument. Both the return type and the arguments must be `System.Text.Json` serializable.
 
-Next, implement the actor by deriving a `ScoreActor` class from `Actor`. The `ScoreActor` class must also implement the `IScoreActor` interface:
+Next, implement the actor by deriving a `ScoreActor` class from `Actor`. The `ScoreActor` class must implement the `IScoreActor` interface:
 
 ```csharp
 public class ScoreActor : Actor, IScoreActor
@@ -229,7 +229,7 @@ public class ScoreActor : Actor, IScoreActor
 }
 ```
 
-The constructor in the snippet above takes a `host` argument of type `ActorHost`. The `ActorHost` class represents the host for an actor type within the actor runtime. You need to pass this argument to the constructor of the `Actor` base class. Actors also support dependency injection. Any additional arguments that you add to the actor constructor are resolved using the ASP.NET Core dependency injection container.
+The constructor in the snippet above takes a `host` argument of type `ActorHost`. The `ActorHost` class represents the host for an actor type within the actor runtime. You'll need to pass this argument to the constructor of the `Actor` base class. Actors also support dependency injection. Any extra arguments that you add to the actor constructor are resolved using the ASP.NET Core dependency injection container.
 
 Let's now implement the `IncrementScoreAsync` method of the interface:
 
@@ -285,10 +285,10 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 }
 ```
 
-The actors endpoints are necessary because the Dapr sidecar calls the application to host and interact with actor instances.
+The actor's endpoints are necessary because the Dapr sidecar calls the application to host and interact with actor instances.
 
 > [!IMPORTANT]
-> By default, a generated `Startup` class contains an `app.UseHttpsRedirection` call to redirect client to the HTTPS endpoint. This will not work with actors and must be removed. By design, a Dapr sidecar send requests over unencrypted HTTP by default. The HTTPS middleware will block these requests when enabled.
+> By default, a generated `Startup` class contains an `app.UseHttpsRedirection` call to redirect client to the HTTPS endpoint. That call doesn't work with actors and must be removed. By design, a Dapr sidecar send requests over *unencrypted HTTP* by default. The HTTPS middleware will block these sidecar requests when enabled.
 
 The `Startup` class is also the place to register the specific actor types. In the example below, `ConfigureServices` registers the `ScoreActor` using `services.AddActors`:
 
@@ -319,14 +319,14 @@ static async Task Main(string[] args)
 }
 ```
 
-The above example uses the `Dapr.Actors` package to call the actor service. To invoke an operation on an actor, you need to be able to address it. You'll need two parts for this:
+The above example uses the `Dapr.Actors` package to call the actor service. To invoke an operation on an actor, you need to uniquely identity it. To identity it, you'll need two values:
 
-1. The **actor type** uniquely identifies the actor implemenation across the whole application. By default, the actor type is the name of the implementation class (without namespace). You can customize the actor type by adding an `ActorAttribute` to the implementation class and setting its `TypeName` property.
-1. The `ActorId` uniquely identifies an instance of an actor type. You can also use this class to generate a random actor id by calling `ActorId.CreateRandom`.
+1. The **actor type** uniquely identifies the actor implementation across the whole application. By default, the actor type is the name of the implementation class (without namespace). You can customize the actor type by adding an `ActorAttribute` to the implementation class and setting its `TypeName` property.
+1. The `ActorId` uniquely identifies an instance of an actor type. You can also use this class to generate a random actor ID by calling `ActorId.CreateRandom`.
 
 The example uses `ActorProxy.Create` to create a proxy instance for the `ScoreActor`. The `Create` method takes two arguments: the `ActorId` identifying the specific actor and the actor type. It also has a generic type parameter to specify the actor interface that the actor type implements. As both the server and client applications need to use the actor interfaces, they're typically stored in a separate shared project.
 
-The final step in the example calls the `IncrementScoreAsync` method on the actor and outputs the result. Remember that the Dapr placement service distributes the actor instances across the Dapr sidecars. Therefor, expect an actor call to be a network call to another node.
+The final step in the example calls the `IncrementScoreAsync` method on the actor and outputs the result. Remember that the Dapr placement service distributes the actor instances across the Dapr sidecars. The call could be across the network to another node.
 
 ### Call actors from ASP.NET Core clients
 
@@ -351,7 +351,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-The call to `AddActors` registers the `IActorProxyFactory` for ASP.NET Core dependency injection. This allows ASP.NET Core to inject an `IActorProxyFactory` instance into your controller classes. The following example calls an actor method from an ASP.NET Core controller class:
+The call to `AddActors` registers the `IActorProxyFactory` for ASP.NET Core dependency injection. It allows ASP.NET Core to inject an `IActorProxyFactory` instance into your controller classes. The following example calls an actor method from an ASP.NET Core controller class:
 
 ```csharp
 [ApiController]
@@ -377,7 +377,7 @@ public class ScoreController : ControllerBase
 }
 ```
 
-Actors can also call other actors directly. The `Actor` base class exposes an `IActorProxyFactory` class through the `ProxyFactory` property. To create an actor proxy from within an actor, use the `ProxyFactory` property of the `Actor` base class. The following example shows an `OrderActor` that invokes operations on two other actors:
+Actors can also call other actors directly. The `Actor` base class exposes an `IActorProxyFactory` class through the `ProxyFactory` property. To create an actor proxy from within an actor, use the `ProxyFactory` property of the `Actor` base class. The following example shows an `OrderActor` that invokes operations on two other actors (a stock and a payment actor):
 
 ```csharp
 public class OrderActor : Actor, IOrderActor
@@ -404,13 +404,13 @@ public class OrderActor : Actor, IOrderActor
 ```
 
 > [!NOTE]
-> By default, Dapr actors aren't reentrant. This means that a Dapr actor cannot be called more than once in the same chain. For example, the call chain `Actor A -> Actor B -> Actor A` is not allowed. At the time of writing, there's a preview feature available to support reentrancy. However, there is no SDK support yet. For more details, see the [official documentation](https://docs.dapr.io/developing-applications/building-blocks/actors/actor-reentrancy/).
+> By default, Dapr actors aren't reentrant. This means that a Dapr actor cannot be called more than once in the same chain. For example, the call chain `Actor A -> Actor B -> Actor A` is not allowed. At the time of writing, there's a preview feature available to support reentrancy. However, there is no SDK support yet. For more information, see the [official documentation](https://docs.dapr.io/developing-applications/building-blocks/actors/actor-reentrancy/).
 
 ### Call non-.NET actors
 
-So far, the examples used strongly-typed actor proxies based on .NET interfaces to illustrate actor invocations. This works great when both the actor host and client are .NET applications. However, if the actor host is not a .NET application, you don't have an actor interface to create a strongly-typed proxy. In these cases, you can use a weakly-typed proxy.
+So far, the examples used strongly typed actor proxies based on .NET interfaces to illustrate actor invocations. They work great when both the actor host and client are .NET applications. However, if the actor host isn't a .NET application, you don't have an actor interface to create a strongly typed proxy. In these cases, you can use a weakly typed proxy.
 
-You create weakly-typed proxies in a similar way to strongly-typed proxies. Instead of relying on a .NET interface, you need to pass in the actor method name as a string.
+You create weakly typed proxies in a similar way to strongly typed proxies. Instead of relying on a .NET interface, you need to pass in the actor method name as a string.
 
 ```csharp
 [HttpPut("{scoreId}")]
@@ -480,7 +480,7 @@ public class TimerActor : Actor, ITimerActor
 }
 ```
 
-Remember that timers do not reset the actor idle timer. When no other calls are made on the actor, it may be deactivated and the timer will be stopped automatically. To schedule work that does reset the idle timer, use reminders which we'll look at next.
+Remember that timers don't reset the actor idle timer. When no other calls are made on the actor, it may be deactivated and the timer will be stopped automatically. To schedule work that does reset the idle timer, use reminders that we'll look at next.
 
 To use reminders in an actor, your actor class must implement the `IRemindable` interface:
 
@@ -491,7 +491,7 @@ public interface IRemindable
 }
 ```
 
-The `ReceiveReminderAsync` method is called when a reminder is fired. It takes 4 arguments:
+The `ReceiveReminderAsync` method is called when a reminder is fired. It takes four arguments:
 
 1. The name of the reminder.
 1. The user state provided during registration.
@@ -536,7 +536,7 @@ Reminders both reset the idle timer and are persistent. Even if your actor is de
 
 ## Sample application: Dapr Traffic Control
 
-The default version of Dapr Traffic Control does not use the actor model. However, it does contain an alternative actor-based implementation of the TrafficControl service that you can enable. To make use of actors in the TrafficControl service, open up the `src/TrafficControlService/Controllers/TrafficController.cs` file and uncomment the `USE_ACTORMODEL` statement at the top of the file:
+The default version of Dapr Traffic Control doesn't use the actor model. However, it does contain an alternative actor-based implementation of the TrafficControl service that you can enable. To make use of actors in the TrafficControl service, open up the `src/TrafficControlService/Controllers/TrafficController.cs` file and uncomment the `USE_ACTORMODEL` statement at the top of the file:
 
 ```csharp
 #define USE_ACTORMODEL
@@ -593,7 +593,7 @@ if (violation > 0)
 }
 ```
 
-The code above uses two external dependencies. The `_speedingViolationCalculator` encapsulates the business logic for determining whether or not a vehicle has driven too fast. The `_daprClient` allows the actor to publish messages using the Dapr pub/sub building block.
+The code above uses two external dependencies. The `_speedingViolationCalculator` encapsulates the business logic for determining whether a vehicle has driven too fast. The `_daprClient` allows the actor to publish messages using the Dapr pub/sub building block.
 
 Both dependencies are registered in the `Startup` class and injected into the actor using constructor dependency injection:
 
@@ -611,13 +611,13 @@ public VehicleActor(ActorHost host, DaprClient daprClient, ISpeedingViolationCal
 }
 ```
 
-The actor based implementation no longer uses the Dapr state management building block directly. Instead, the state is automatically persisted after each operation is executed.
+The actor-based implementation no longer uses the Dapr state management building block directly. Instead, the state is automatically persisted after each operation is executed.
 
 ## Summary
 
-The Dapr actors building block makes it easier to write correct concurrent systems. Actors are small units of state and logic. They use a turn-based access model which saves you from having to write error-prone thread-safe code. Actors are created implicitly and are silently unloaded from memory when no operations are performed. Any state stored in the actor is automatically persisted and loaded when the actor is reactivated. Actor model implementations are typically created for a specific language or platform. With the Dapr actors building block however, you can leverage the actor model from any language or platform.
+The Dapr actors building block significantly reduces the complexity to implement concurrent operations within a system. Actors are small units of state and logic. They use a turn-based access model that frees you from having to write complex thread-safe code. Actors are created implicitly and silently unloaded from memory when no operations are performed. Any state stored in the actor is automatically persisted and loaded when the actor is reactivated. Actor model implementations are typically coupled to a specific language or platform. With the Dapr actors building block however, you can use the actor model from any language or platform.
 
-Actors support timers and reminders to schedule future work. Timers do not reset the idle timer and will allow the actor to be deactivated when no other operations are performed. Reminders do reset the idle timer and are also persisted automatically. Both timers and reminders respect the turn-based access model, making sure that no other operations can execute while the timer/reminder events are handled.
+Actors support timers and reminders to schedule future work. Timers don't reset the idle timer. They allow the actor to deactivate when no other operations are performed. Reminders do reset the idle timer and are also persisted automatically. Both timers and reminders respect the turn-based access model.
 
 Actor state is persisted using the Dapr [state management building block](state-management.md). Any state store that supports multi-item transactions can be used to store actor state.
 
